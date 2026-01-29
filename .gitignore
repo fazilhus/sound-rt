@@ -30,6 +30,7 @@ x86/
 bld/
 [Bb]in/*
 ![Bb]in/shd
+![Bb]in/assets
 [Oo]bj/
 [Ll]og/
 

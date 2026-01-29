@@ -22,6 +22,7 @@
 
 #include "soloud.h"
 #include "soloud_speech.h"
+#include "soloud_wav.h"
 #include "fx/gltf.h"
 
 #include "core/filesystem.h"
@@ -156,15 +157,16 @@ namespace Game {
         Physics::HitInfo hit;
         // auto dt = 1.0f / 60.0f;
 
-        SoLoud::Soloud soloud;
-        SoLoud::Speech speech;
+        SoLoud::Soloud gSoloud;
+        SoLoud::Wav gJazz;
 
-        soloud.init();
-        soloud.setVisualizationEnable(1);
-        speech.setText("Hello World from SoLoud");
-        speech.setVolume(5);
+        gSoloud.init();
 
-        soloud.play(speech);
+        gJazz.load(fs::create_path_from_rel_s("assets/audio/jazz.mp3").c_str());
+        gJazz.setLooping(true);
+        gJazz.setVolume(0.1f);
+
+        auto jazz_handle = gSoloud.play(gJazz);
 
         // game loop
         while (this->window->IsOpen()) {
@@ -233,7 +235,8 @@ namespace Game {
                 this->Exit();
         }
 
-        soloud.deinit();
+        gSoloud.stop(jazz_handle);
+        gSoloud.deinit();
     }
 
     //------------------------------------------------------------------------------
