@@ -496,7 +496,7 @@ namespace Render {
                 Core::FastRandom()
                 );
 
-            const int numWorkGroups[3] = {
+            const uint32_t numWorkGroups[3] = {
                 emitter->data.numParticles / 1024,
                 1,
                 1

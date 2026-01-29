@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "resourceid.h"
-#include <gl/glew.h>
+#include <GL/glew.h>
 #include <config.h>
 
 

@@ -9,7 +9,7 @@
 #include "resourceid.h"
 #include <vector>
 #include <string>
-#include <gl/glew.h>
+#include <GL/glew.h>
 
 
 namespace Render {
