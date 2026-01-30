@@ -16,7 +16,7 @@ namespace Core {
         /// constructor
         App();
         /// destructor
-        ~App();
+        virtual ~App();
 
         /// open application
         virtual bool Open();
@@ -29,7 +29,7 @@ namespace Core {
         /// set the exit code
         void SetExitCode(int exitCode);
         /// get the current exit code
-        int ExitCode();
+        [[nodiscard]] int ExitCode() const;
 
     private:
         bool isOpen;

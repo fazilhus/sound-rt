@@ -4,7 +4,6 @@
 //------------------------------------------------------------------------------
 #include "config.h"
 #include "spacegameapp.h"
-#include <cstring>
 #include "imgui.h"
 #include "render/renderdevice.h"
 #include "render/shaderresource.h"
@@ -21,15 +20,13 @@
 #include <thread>
 
 #include "soloud.h"
-#include "soloud_speech.h"
 #include "soloud_wav.h"
 #include "fx/gltf.h"
 
 #include "core/filesystem.h"
-#include "core/math.h"
+#include "core/maths.h"
 #include "physics/phy.h"
 #include "physics/physicsmesh.h"
-#include "physics/simplex.h"
 
 using namespace Display;
 using namespace Render;
@@ -40,7 +37,7 @@ namespace Game {
     //------------------------------------------------------------------------------
     /**
     */
-    SpaceGameApp::SpaceGameApp() : deltaTime(1.0f / 60.0f) {
+    SpaceGameApp::SpaceGameApp() : window(nullptr), camera(nullptr), deltaTime(1.0f / 60.0f) {
         // empty
     }
 
@@ -49,7 +46,7 @@ namespace Game {
     */
     SpaceGameApp::~SpaceGameApp() {
         // empty
-        if (camera != nullptr) { delete camera; }
+        delete camera;
     }
 
     //------------------------------------------------------------------------------
@@ -57,7 +54,7 @@ namespace Game {
     */
     bool SpaceGameApp::Open() {
         App::Open();
-        this->window = new Display::Window;
+        this->window = new Window;
         this->window->SetSize(1920, 1080);
 
         if (this->window->Open()) {
@@ -74,11 +71,6 @@ namespace Game {
         return false;
     }
 
-    std::ostream& operator<<(std::ostream& os, const glm::vec3& v) {
-        os << v.x << ' ' << v.y << ' ' << v.z;
-        return os;
-    }
-
     //------------------------------------------------------------------------------
     /**
     */
@@ -86,7 +78,7 @@ namespace Game {
         int w;
         int h;
         this->window->GetSize(w, h);
-        glm::mat4 projection = glm::perspective(glm::radians(90.0f), float(w) / float(h), 0.01f, 1000.f);
+        glm::mat4 projection = glm::perspective(glm::radians(90.0f), static_cast<float>(w) / static_cast<float>(h), 0.01f, 1000.f);
         Camera* cam = CameraManager::GetCamera(CAMERA_MAIN);
         cam->projection = projection;
 
@@ -94,7 +86,7 @@ namespace Game {
         auto t = glm::mat4(1.0f);
         cam->view = lookAt(cam_pos, cam_pos + glm::vec3(t[2]), glm::vec3(t[1]));
 
-        camera = new Render::DebugCamera(5.0f, 1.5f);
+        camera = new DebugCamera(5.0f, 1.5f);
         camera->pos = cam_pos;
 
         Physics::init_debug();
@@ -134,10 +126,10 @@ namespace Game {
         Input::Keyboard* kbd = Input::GetDefaultKeyboard();
         Input::Mouse* mouse = Input::GetDefaultMouse();
 
-        const int numLights = 40;
-        Render::PointLightId lights[numLights];
+        constexpr auto numLights = 40;
         // Setup lights
-        for (int i = 0; i < numLights; i++) {
+        for (PointLightId lights[numLights];
+             auto & light : lights) {
             glm::vec3 translation = glm::vec3(
                 Core::RandomFloatNTP() * 20.0f,
                 Core::RandomFloatNTP() * 20.0f,
@@ -148,7 +140,7 @@ namespace Game {
                 Core::RandomFloat(),
                 Core::RandomFloat()
                 );
-            lights[i] = Render::LightServer::CreatePointLight(
+            light = LightServer::CreatePointLight(
                 translation, color, Core::RandomFloat() * 4.0f, 1.0f + (15 + Core::RandomFloat() * 10.0f)
                 );
         }
@@ -264,7 +256,7 @@ namespace Game {
 
             Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
             int drawLightSpheres = Core::CVarReadInt(r_draw_light_spheres);
-            if (ImGui::Checkbox("Draw Light Spheres", (bool*)&drawLightSpheres))
+            if (ImGui::Checkbox("Draw Light Spheres", reinterpret_cast<bool*>(&drawLightSpheres)))
                 Core::CVarWriteInt(r_draw_light_spheres, drawLightSpheres);
 
             Core::CVar* r_draw_light_sphere_id = Core::CVarGet("r_draw_light_sphere_id");
@@ -275,11 +267,11 @@ namespace Game {
             ImGui::SeparatorText("Collision Debug Draw");
             Core::CVar* r_draw_aabb = Core::CVarGet("r_draw_aabb");
             int draw_aabb = Core::CVarReadInt(r_draw_aabb);
-            if (ImGui::Checkbox("Draw AABBs", (bool*)&draw_aabb))
+            if (ImGui::Checkbox("Draw AABBs", reinterpret_cast<bool*>(&draw_aabb)))
                 Core::CVarWriteInt(r_draw_aabb, draw_aabb);
             Core::CVar* r_draw_cm_norm = Core::CVarGet("r_draw_cm_norm");
             int draw_cm_norm = Core::CVarReadInt(r_draw_cm_norm);
-            if (ImGui::Checkbox("Draw Collision Mesh normals", (bool*)&draw_cm_norm))
+            if (ImGui::Checkbox("Draw Collision Mesh normals", reinterpret_cast<bool*>(&draw_cm_norm)))
                 Core::CVarWriteInt(r_draw_cm_norm, draw_cm_norm);
 
             Core::CVar* r_draw_aabb_id = Core::CVarGet("r_draw_aabb_id");

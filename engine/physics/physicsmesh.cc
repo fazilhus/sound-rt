@@ -6,7 +6,7 @@
 #include "plane.h"
 #include "ray.h"
 #include "core/idpool.h"
-#include "core/math.h"
+#include "core/maths.h"
 #include "fx/gltf.h"
 
 

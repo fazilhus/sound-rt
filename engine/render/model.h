@@ -11,7 +11,6 @@
 #include <vector>
 #include "renderdevice.h"
 #include "resourceid.h"
-#include "textureresource.h"
 #include "fx/gltf.h"
 
 
@@ -61,10 +60,10 @@ namespace Render {
 
         struct Mesh {
             struct Primitive {
-                GLuint vao;
-                GLuint numIndices;
+                GLuint vao{};
+                GLuint numIndices{};
                 GLuint offset = 0;
-                GLenum indexType;
+                GLenum indexType{};
                 Material material;
             };
 
@@ -79,11 +78,11 @@ namespace Render {
         uint refcount;
     };
 
-    ModelId LoadModel(std::string name, fx::gltf::ReadQuotas q = {});
+    ModelId LoadModel(const std::string& name, const fx::gltf::ReadQuotas& q = {});
 
     void UnloadModel(ModelId);
 
-    bool const IsModelValid(ModelId);
+    bool IsModelValid(ModelId);
 
     Model const& GetModel(ModelId id);
 } // namespace Render

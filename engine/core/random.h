@@ -21,4 +21,10 @@ namespace Core {
     /// Produces an xorshift128 psuedo based floating point random number in range -1..1
 /// Note that this is not a truely random random number generator
     float RandomFloatNTP();
+
+    /// random float with a normal distribution
+    float RandomNormal(float mean = 0, float std_deriv = 1);
+
+    /// random point on unit sphere using normal distribution
+    glm::vec3 RandomPointOnUnitSphere();
 } // namespace Core

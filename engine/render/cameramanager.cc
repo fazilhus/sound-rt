@@ -25,7 +25,7 @@ namespace Render {
 
         /// cameramanager singleton state
         struct State {
-            CameraState cameras[32];
+            CameraState cameras[32]{};
             unsigned char numCameras = 0;
 
             std::unordered_map<uint32_t, uint32_t> cameraTable;
@@ -48,8 +48,8 @@ namespace Render {
         CreateCamera(cameraInfo);
     }
 
-    CameraManager::CameraState DeriveCameraState(glm::mat4 view, glm::mat4 projection) {
-        CameraManager::CameraState camera;
+    CameraManager::CameraState DeriveCameraState(const glm::mat4& view, const glm::mat4& projection) {
+        CameraManager::CameraState camera{};
         camera.view = view;
         camera.projection = projection;
         camera.invView = inverse(view);
@@ -62,8 +62,7 @@ namespace Render {
     //------------------------------------------------------------------------------
     /**
 */
-    Camera* const
-    CameraManager::CreateCamera(CameraCreateInfo const& info) {
+    Camera* CameraManager::CreateCamera(CameraCreateInfo const& info) {
         state->cameraTable.emplace(info.hash, state->numCameras);
         assert(state->numCameras + 1 < 32);
         CameraState& camera = state->cameras[state->numCameras++];
@@ -74,9 +73,8 @@ namespace Render {
     //------------------------------------------------------------------------------
     /**
 */
-    void
-    CameraManager::UpdateCamera(Camera * const camera) {
-        *reinterpret_cast<Render::CameraManager::CameraState*>(camera) = DeriveCameraState(
+    void CameraManager::UpdateCamera(Camera * const camera) {
+        *reinterpret_cast<CameraState*>(camera) = DeriveCameraState(
             camera->view, camera->projection
         );
     }
@@ -84,8 +82,7 @@ namespace Render {
     //------------------------------------------------------------------------------
     /**
 */
-    Camera* const
-    CameraManager::GetCamera(uint32_t CAMERA_HASH) {
+    Camera* CameraManager::GetCamera(const uint32_t CAMERA_HASH) {
         return reinterpret_cast<Camera*>(&state->cameras[state->cameraTable[CAMERA_HASH]]);
     }
 
@@ -102,8 +99,7 @@ namespace Render {
     /**
 */
     void CameraManager::OnBeforeRender() {
-        index_t i;
-        for (i = 0; i < state->numCameras; i++) {
+        for (index_t i = 0; i < state->numCameras; i++) {
             glm::mat4 const view = state->cameras[i].view;
             glm::mat4 const projection = state->cameras[i].projection;
             state->cameras[i] = DeriveCameraState(view, projection);

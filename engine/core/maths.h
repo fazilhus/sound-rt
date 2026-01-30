@@ -1,15 +1,18 @@
 ﻿#pragma once
+#include <numbers>
 #include "vec3.hpp"
 
 #include "physics/physicsresource.h"
 
 namespace Math {
 
+    constexpr auto pi_f = std::numbers::pi_v<float>;
+
     inline float len_sq(const glm::vec3& v) { return v.x * v.x + v.y * v.y + v.z * v.z; }
 
     inline glm::vec3 safe_normal(const glm::vec3& v) {
         const auto len_sq = v.x * v.x + v.y * v.y + v.z * v.z;
-        if (len_sq <= Physics::epsilon_f) { return glm::vec3(0, 0, 0); }
+        if (len_sq <= Physics::epsilon_f) { return {0, 0, 0}; }
         return v / sqrt(len_sq);
     }
 

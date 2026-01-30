@@ -1,7 +1,7 @@
 ﻿#include "config.h"
 #include "simplex.h"
 
-#include "core/math.h"
+#include "core/maths.h"
 
 
 namespace Physics {

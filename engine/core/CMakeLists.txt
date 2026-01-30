@@ -13,7 +13,7 @@ SET(files_core
     cvar.cc
     idpool.h
     filesystem.h
-    math.h
+    maths.h
     util.h
 )
 SOURCE_GROUP("core" FILES ${files_core})

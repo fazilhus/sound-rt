@@ -4,7 +4,7 @@
 
 #include "core/cvar.h"
 #include "core/idpool.h"
-#include "core/math.h"
+#include "core/maths.h"
 #include "physics/ray.h"
 #include "physics/simplex.h"
 #include "physics/physicsmesh.h"

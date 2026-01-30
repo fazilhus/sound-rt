@@ -23,8 +23,8 @@ namespace Core {
     struct CVar {
         std::string name;
         std::string description;
-        CVarValue value;
-        bool modified;
+        CVarValue value{};
+        bool modified{};
     };
 
     constexpr uint16_t MAX_CVARS = 1024;
@@ -40,10 +40,10 @@ namespace Core {
         if (ptr)
             return ptr;
 
-        std::string name = std::string(info.name);
+        const auto name = std::string(info.name);
 
 #if _DEBUG
-        if (name.find(" ") != std::string::npos) {
+        if (name.find(' ') != std::string::npos) {
             printf("CVar name cannot contain spaces.");
             assert(false);
         }
@@ -91,10 +91,10 @@ namespace Core {
     void CVarParseWrite(CVar* cVar, const char* value) {
         switch (cVar->value.type) {
         case CVar_Int:
-            CVarWriteInt(cVar, atoi(value));
+            CVarWriteInt(cVar, strtol(value, NULL, 10));
             break;
         case CVar_Float:
-            CVarWriteFloat(cVar, (float)atof(value));
+            CVarWriteFloat(cVar, static_cast<float>(strtod(value, NULL)));
             break;
         case CVar_String:
             CVarWriteString(cVar, value);
@@ -115,7 +115,6 @@ namespace Core {
         }
 
         n_printf("Warning: Invalid CVar type passed to CVarWrite.\n");
-        return;
     }
 
     //------------------------------------------------------------------------------
@@ -129,7 +128,6 @@ namespace Core {
         }
 
         n_printf("Warning: Invalid CVar type passed to CVarWrite.\n");
-        return;
     }
 
     //------------------------------------------------------------------------------
@@ -149,13 +147,12 @@ namespace Core {
         }
 
         n_printf("Warning: Invalid CVar type passed to CVarWrite.\n");
-        return;
     }
 
     //------------------------------------------------------------------------------
     /**
 */
-    int const CVarReadInt(CVar* cVar) {
+    int CVarReadInt(const CVar* cVar) {
         if (cVar->value.type == CVar_Int) { return cVar->value.i; }
 
         n_printf("Warning: Trying to read incorrect type from CVar.\n");
@@ -165,7 +162,7 @@ namespace Core {
     //------------------------------------------------------------------------------
     /**
 */
-    float const CVarReadFloat(CVar* cVar) {
+    float CVarReadFloat(const CVar* cVar) {
         if (cVar->value.type == CVar_Float) { return cVar->value.f; }
 
         n_printf("Warning: Trying to read incorrect type from CVar.\n");
@@ -175,7 +172,7 @@ namespace Core {
     //------------------------------------------------------------------------------
     /**
 */
-    const char* CVarReadString(CVar* cVar) {
+    const char* CVarReadString(const CVar* cVar) {
         if (cVar->value.type == CVar_String) { return cVar->value.cstr; }
 
         n_printf("Warning: Trying to read incorrect type from CVar.\n");
@@ -185,27 +182,27 @@ namespace Core {
     //------------------------------------------------------------------------------
     /**
 */
-    bool CVarModified(CVar* cVar) { return cVar->modified; }
+    bool CVarModified(const CVar* cVar) { return cVar->modified; }
 
     //------------------------------------------------------------------------------
     /**
 */
-    void CVarSetModified(CVar* cVar, bool value) { cVar->modified = value; }
+    void CVarSetModified(CVar* cVar, const bool value) { cVar->modified = value; }
 
     //------------------------------------------------------------------------------
     /**
 */
-    CVarType CVarGetType(CVar* cVar) { return cVar->value.type; }
+    CVarType CVarGetType(const CVar* cVar) { return cVar->value.type; }
 
     //------------------------------------------------------------------------------
     /**
 */
-    const char* CVarGetName(CVar* cVar) { return cVar->name.c_str(); }
+    const char* CVarGetName(const CVar* cVar) { return cVar->name.c_str(); }
 
     //------------------------------------------------------------------------------
     /**
 */
-    const char* CVarGetDescription(CVar* cVar) { return cVar->description.c_str(); }
+    const char* CVarGetDescription(const CVar* cVar) { return cVar->description.c_str(); }
 
     //------------------------------------------------------------------------------
     /**

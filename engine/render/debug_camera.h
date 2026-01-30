@@ -17,7 +17,7 @@ namespace Render {
 
         void Update(float dt);
 
-        Physics::Ray SpawnRay() const;
+        static [[nodiscard]] Physics::Ray SpawnRay() ;
     };
 
 } // namespace Render

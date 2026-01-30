@@ -5,6 +5,8 @@
 #include "config.h"
 #include "random.h"
 
+#include "maths.h"
+
 
 namespace Core {
     union RandomUnion {
@@ -23,8 +25,7 @@ namespace Core {
         static uint y = 362436069;
         static uint z = 521288629;
         static uint w = 88675123;
-        uint t;
-        t = x ^ (x << 11);
+        uint t = x ^ (x << 11);
         x = y;
         y = z;
         z = w;
@@ -48,5 +49,20 @@ namespace Core {
         static RandomUnion r;
         r.i = FastRandom() & 0x007fffff | 0x40000000;
         return r.f - 3.0f;
+    }
+
+    float RandomNormal(const float mean, const float std_deriv) {
+        const auto theta = 2.0f * Math::pi_f * RandomFloat();
+        const auto rho = sqrtf(-2.0f * logf(RandomFloat()));
+        const auto scale = std_deriv * rho;
+        return mean + scale * cosf(theta);
+    }
+
+    glm::vec3 RandomPointOnUnitSphere() {
+        return glm::normalize(glm::vec3{
+            RandomNormal(0.0f, 1.0f),
+            RandomNormal(0.0f, 1.0f),
+            RandomNormal(0.0f, 1.0f),
+        });
     }
 } // namespace Core

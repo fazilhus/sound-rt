@@ -7,9 +7,6 @@
 #include "fx/gltf.h"
 #include "textureresource.h"
 
-#include "lightserver.h"
-
-
 namespace Render {
     static uint nameCounter = 0;
     static std::vector<Model> modelAllocator;
@@ -46,10 +43,8 @@ namespace Render {
     /**
 */
     void InferBufferTargets(fx::gltf::Document& model) {
-        bool infer = false;
-        for (unsigned i = 0; i < model.bufferViews.size(); i++) {
-            bool br = false;
-            auto const& bufferView = model.bufferViews[i];
+        auto infer = false;
+        for (const auto & bufferView : model.bufferViews) {
             if (bufferView.target == fx::gltf::BufferView::TargetType::None) {
                 infer = true;
                 break;
@@ -60,15 +55,13 @@ namespace Render {
             // TODO: could be better
             for (auto const& mesh: model.meshes) {
                 for (auto const& primitive: mesh.primitives) {
-                    for (auto const& attr: primitive.attributes) {
-                        auto const& accessor = model.accessors[attr.second];
-                        model.bufferViews[accessor.bufferView].target = (fx::gltf::BufferView::TargetType)
-                            GL_ARRAY_BUFFER;
+                    for (const auto& val: primitive.attributes | std::views::values) {
+                        auto const& accessor = model.accessors[val];
+                        model.bufferViews[accessor.bufferView].target = static_cast<fx::gltf::BufferView::TargetType>(GL_ARRAY_BUFFER);
                     }
 
                     auto const& accessor = model.accessors[primitive.indices];
-                    model.bufferViews[accessor.bufferView].target = (fx::gltf::BufferView::TargetType)
-                        GL_ELEMENT_ARRAY_BUFFER;
+                    model.bufferViews[accessor.bufferView].target = static_cast<fx::gltf::BufferView::TargetType>(GL_ELEMENT_ARRAY_BUFFER);
                 }
             }
         }
@@ -81,20 +74,20 @@ namespace Render {
         fx::gltf::Document doc;
 
         try {
-            if (uri.substr(uri.find_last_of(".") + 1) == "glb")
+            if (uri.substr(uri.find_last_of('.') + 1) == "glb")
                 doc = fx::gltf::LoadFromBinary(uri, q);
             else
                 doc = fx::gltf::LoadFromText(uri, q);
         }
         catch (const std::exception& err) {
-            printf(err.what());
+            printf("%s\n", err.what());
             assert(false);
             return Model();
         }
 
         InferBufferTargets(doc); // fix up buffertargets if necessary
 
-        int numBuffers = 0;
+        auto numBuffers = 0;
         //count number of buffers necessary
         size_t const numBufferViews = doc.bufferViews.size();
         for (unsigned i = 0; i < numBufferViews; i++) {
@@ -107,16 +100,16 @@ namespace Render {
         model.buffers.resize(numBuffers, -1);
         glGenBuffers(numBuffers, &model.buffers[0]);
 
-        std::vector<int> bufferViewMap(numBufferViews);
+        std::vector<unsigned> bufferViewMap(numBufferViews);
 
         //TODO: We should use less buffers and possibly rebind less often.
         //		Put everything in one buffer and just use the offsets in the attribute pointers
 
         unsigned bufferIndex = 0;
         for (unsigned i = 0; i < numBufferViews; i++) {
-            auto const& bufferView = doc.bufferViews[i];
-            if (bufferView.target != fx::gltf::BufferView::TargetType::None) {
-                GLenum const target = (GLenum)bufferView.target;
+            if (auto const& bufferView = doc.bufferViews[i];
+                bufferView.target != fx::gltf::BufferView::TargetType::None) {
+                auto const target = static_cast<GLenum>(bufferView.target);
                 glBindBuffer(target, model.buffers[bufferIndex]);
                 glBufferData(
                     target,
@@ -160,10 +153,10 @@ namespace Render {
                     .name = name,
                     .buffer = &data[0],
                     .bytes = data.size(),
-                    .magFilter = (Render::MagFilter)sampler.magFilter,
-                    .minFilter = (Render::MinFilter)sampler.minFilter,
-                    .wrappingModeS = (Render::WrappingMode)sampler.wrapS,
-                    .wrappingModeT = (Render::WrappingMode)sampler.wrapT,
+                    .magFilter = static_cast<MagFilter>(sampler.magFilter),
+                    .minFilter = static_cast<MinFilter>(sampler.minFilter),
+                    .wrappingModeS = static_cast<WrappingMode>(sampler.wrapS),
+                    .wrappingModeT = static_cast<WrappingMode>(sampler.wrapT),
                     .sRGB = sRGB,
                     .placeholder = TextureResource::GetWhiteTexture()
                 };
@@ -184,10 +177,10 @@ namespace Render {
                     .name = name,
                     .buffer = (void*)&buffer.data[bufferView.byteOffset],
                     .bytes = bufferView.byteLength,
-                    .magFilter = (Render::MagFilter)sampler.magFilter,
-                    .minFilter = (Render::MinFilter)sampler.minFilter,
-                    .wrappingModeS = (Render::WrappingMode)sampler.wrapS,
-                    .wrappingModeT = (Render::WrappingMode)sampler.wrapT,
+                    .magFilter = static_cast<MagFilter>(sampler.magFilter),
+                    .minFilter = static_cast<MinFilter>(sampler.minFilter),
+                    .wrappingModeS = static_cast<WrappingMode>(sampler.wrapS),
+                    .wrappingModeT = static_cast<WrappingMode>(sampler.wrapT),
                     .sRGB = sRGB,
                     .placeholder = TextureResource::GetWhiteTexture()
                 };
@@ -204,10 +197,10 @@ namespace Render {
                     std::string imagePath = p.parent_path().string() + "/" + name;
                     id = TextureResource::LoadTexture(
                         imagePath.c_str(),
-                        (Render::MagFilter)sampler.magFilter,
-                        (Render::MinFilter)sampler.minFilter,
-                        (Render::WrappingMode)sampler.wrapS,
-                        (Render::WrappingMode)sampler.wrapT,
+                        (MagFilter)sampler.magFilter,
+                        (MinFilter)sampler.minFilter,
+                        (WrappingMode)sampler.wrapS,
+                        (WrappingMode)sampler.wrapT,
                         sRGB
                     );
                 }
@@ -241,24 +234,22 @@ namespace Render {
 
                 glGenVertexArrays(1, &p.vao);
                 glBindVertexArray(p.vao);
-                for (auto const& attribute: primitive.attributes) {
-                    auto const& accessor = doc.accessors[attribute.second];
+                for (const auto& [fst, snd]: primitive.attributes) {
+                    auto const& accessor = doc.accessors[snd];
 
                     Model::VertexAttribute attr;
                     attr.offset = accessor.byteOffset;
                     attr.stride = doc.bufferViews[accessor.bufferView].byteStride;
                     attr.normalized = accessor.normalized;
 
-                    attr.slot = SlotFromGltf(attribute.first);
-                    attr.type = (GLenum)accessor.componentType;
+                    attr.slot = SlotFromGltf(fst);
+                    attr.type = static_cast<GLenum>(accessor.componentType);
 
-                    n_assert((int)accessor.type > 0 && (int)accessor.type <= 4);
-                    attr.components = (GLint)accessor.type;
+                    n_assert(static_cast<int>(accessor.type) > 0 && static_cast<int>(accessor.type) <= 4);
+                    attr.components = static_cast<GLint>(accessor.type);
 
-                    fx::gltf::BufferView const& bufferView = doc.bufferViews[accessor.bufferView];
-                    fx::gltf::Buffer const& buffer = doc.buffers[bufferView.buffer];
                     glBindBuffer(
-                        (GLenum)doc.bufferViews[accessor.bufferView].target,
+                        static_cast<GLenum>(doc.bufferViews[accessor.bufferView].target),
                         model.buffers[bufferViewMap[accessor.bufferView]]
                     );
                     glEnableVertexArrayAttrib(p.vao, attr.slot);
@@ -268,7 +259,7 @@ namespace Render {
                         attr.type,
                         attr.normalized,
                         attr.stride,
-                        (void*)(intptr_t)attr.offset
+                        reinterpret_cast<void*>(static_cast<intptr_t>(attr.offset))
                     );
                 }
 
@@ -276,7 +267,7 @@ namespace Render {
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.buffers[bufferViewMap[ibAccessor.bufferView]]);
                 p.numIndices = ibAccessor.count;
                 p.offset = ibAccessor.byteOffset;
-                p.indexType = (GLenum)ibAccessor.componentType;
+                p.indexType = static_cast<GLenum>(ibAccessor.componentType);
 
                 if (primitive.material != -1) {
                     // TODO: cutout materials
@@ -310,18 +301,18 @@ namespace Render {
                                                                                       occlusionTexture.index]
                                                                                   : TextureResource::GetBlackTexture();
 
-                    p.material.alphaMode = (Model::Material::AlphaMode)gltfMaterial.alphaMode;
+                    p.material.alphaMode = static_cast<Model::Material::AlphaMode>(gltfMaterial.alphaMode);
                     p.material.alphaCutoff = gltfMaterial.alphaCutoff;
                     p.material.doubleSided = gltfMaterial.doubleSided;
                     if (p.material.alphaMode == Model::Material::AlphaMode::Blend)
-                        m.blendPrimitives.push_back((uint16_t)m.primitives.size());
+                        m.blendPrimitives.push_back(static_cast<uint16_t>(m.primitives.size()));
                     else
-                        m.opaquePrimitives.push_back((uint16_t)m.primitives.size());
+                        m.opaquePrimitives.push_back(static_cast<uint16_t>(m.primitives.size()));
                 }
 
                 glBindVertexArray(0);
 
-                m.primitives.push_back(std::move(p));
+                m.primitives.push_back(p);
             }
             model.meshes.push_back(std::move(m));
         }
@@ -332,10 +323,10 @@ namespace Render {
     //------------------------------------------------------------------------------
     /**
 */
-    ModelId LoadModel(std::string name, fx::gltf::ReadQuotas q) {
-        auto iter = modelRegistry.find(name);
-        if (iter != modelRegistry.end()) {
-            ModelId const mid = (*iter).second;
+    ModelId LoadModel(const std::string& name, const fx::gltf::ReadQuotas& q) {
+        if (const auto iter = modelRegistry.find(name);
+            iter != modelRegistry.end()) {
+            ModelId const mid = iter->second;
             modelAllocator[mid].refcount++; // increment refcount
             return mid;
         }
@@ -343,7 +334,7 @@ namespace Render {
         if (std::filesystem::exists(name)) {
             Model mdl = LoadGLTF(name, q);
             mdl.refcount = 1;
-            ModelId const mid = (ModelId)modelAllocator.size();
+            const auto mid = static_cast<ModelId>(modelAllocator.size());
             modelAllocator.push_back(mdl);
             modelRegistry.emplace(name, mid);
             return mid;
@@ -356,25 +347,24 @@ namespace Render {
     //------------------------------------------------------------------------------
     /**
 */
-    void UnloadModel(ModelId mid) {
+    void UnloadModel(const ModelId mid) {
         n_assert(IsModelValid(mid));
         modelAllocator[mid].refcount--;
         if (modelAllocator[mid].refcount <= 0) {
             // TODO: Fully unload model
         }
-        return;
     }
 
     //------------------------------------------------------------------------------
     /**
 */
-    Model const& GetModel(ModelId id) { return modelAllocator[id]; }
-
-    //------------------------------------------------------------------------------
-    /**
-*/
-    bool const IsModelValid(ModelId) {
+    bool IsModelValid(ModelId) {
         // FIXME: we should use a generational id for the models.
         return true;
     }
+
+    //------------------------------------------------------------------------------
+    /**
+*/
+    Model const& GetModel(const ModelId id) { return modelAllocator[id]; }
 } // namespace Render

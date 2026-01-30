@@ -2,7 +2,7 @@
 #include "debug_camera.h"
 
 #include "cameramanager.h"
-#include "core/math.h"
+#include "core/maths.h"
 #include "input/inputserver.h"
 
 
@@ -42,7 +42,7 @@ namespace Render {
         camera->view = glm::lookAt(this->pos, this->pos + glm::vec3(this->trans[2]), glm::vec3(this->trans[1]));
     }
 
-    Physics::Ray DebugCamera::SpawnRay() const {
+    Physics::Ray DebugCamera::SpawnRay() {
         const auto camera = CameraManager::GetCamera(CAMERA_MAIN);
         const auto mouse = Input::GetDefaultMouse();
         const auto ml = Math::norm_screen_pos(mouse->position, glm::vec2(1920.0f, 1080.0f));

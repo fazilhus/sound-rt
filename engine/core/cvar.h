@@ -55,21 +55,21 @@ namespace Core {
     /// Write string value to cvar
     void CVarWriteString(CVar*, const char* value);
     /// Read int value from cvar
-    int const CVarReadInt(CVar*);
+    int CVarReadInt(const CVar*);
     /// Read float value from cvar
-    float const CVarReadFloat(CVar*);
+    float CVarReadFloat(const CVar*);
     /// Read string value from cvar
-    const char* CVarReadString(CVar*);
+    const char* CVarReadString(const CVar*);
     /// Check if a CVar has been modified
-    bool CVarModified(CVar*);
+    bool CVarModified(const CVar*);
     /// Set the modified status of a cvar
     void CVarSetModified(CVar*, bool);
     /// Get the type of a cvar
-    CVarType CVarGetType(CVar*);
+    CVarType CVarGetType(const CVar*);
     /// Get the cvars name
-    const char* CVarGetName(CVar*);
+    const char* CVarGetName(const CVar*);
     /// Get the cvars description
-    const char* CVarGetDescription(CVar*);
+    const char* CVarGetDescription(const CVar*);
     /// Get the number of vars created
     int CVarNum();
     /// Get a pointer to the first cvar in the array

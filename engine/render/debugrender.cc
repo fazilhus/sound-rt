@@ -13,7 +13,7 @@
 #include "cameramanager.h"
 #include "imgui.h"
 #include "core/cvar.h"
-#include "core/math.h"
+#include "core/maths.h"
 #include "physics/phy.h"
 #include "physics/plane.h"
 #include "physics/ray.h"
@@ -23,6 +23,7 @@
 
 namespace Debug {
     enum DebugShape {
+        None,
         LINE,
         TRIANGLE,
         QUAD,
@@ -38,39 +39,39 @@ namespace Debug {
     };
 
     struct RenderCommand {
-        DebugShape shape;
-        char rendermode = RenderMode::Normal;
+        DebugShape shape{};
+        char rendermode = Normal;
         float linewidth = 1.0f;
     };
 
-    struct LineCommand : public RenderCommand {
+    struct LineCommand : RenderCommand {
         glm::vec3 startpoint = glm::vec3(0.0f);
         glm::vec3 endpoint = glm::vec3(1.0f);
         glm::vec4 startcolor = glm::vec4(1.0f);
         glm::vec4 endcolor = glm::vec4(1.0f);
     };
 
-    struct TriangleCommand : public RenderCommand {
-        glm::vec3 ps[3];
+    struct TriangleCommand : RenderCommand {
+        glm::vec3 ps[3]{};
         glm::mat4 transform = glm::mat4();
         glm::vec4 color = glm::vec4(1.0f);
     };
 
-    struct QuadCommand : public RenderCommand {
+    struct QuadCommand : RenderCommand {
         glm::mat4 transform = glm::mat4();
         glm::vec4 color = glm::vec4(1.0f);
     };
 
-    struct BoxCommand : public RenderCommand {
+    struct BoxCommand : RenderCommand {
         glm::mat4 transform = glm::mat4();
         glm::vec4 color = glm::vec4(1.0f);
     };
 
-    struct GridCommand : public RenderCommand {};
+    struct GridCommand : RenderCommand {};
 
     struct TextCommand {
-        glm::vec4 point;
-        glm::vec4 color;
+        glm::vec4 point{};
+        glm::vec4 color{};
         std::string text;
     };
 
@@ -93,8 +94,8 @@ namespace Debug {
         const glm::vec3& startPoint, const glm::vec3& endPoint, const float lineWidth, const glm::vec4& startColor,
         const glm::vec4& endColor, const RenderMode& renderModes
         ) {
-        LineCommand* cmd = new LineCommand();
-        cmd->shape = DebugShape::LINE;
+        auto* cmd = new LineCommand();
+        cmd->shape = LINE;
         cmd->startpoint = startPoint;
         cmd->endpoint = endPoint;
         cmd->linewidth = lineWidth;
@@ -115,8 +116,8 @@ namespace Debug {
         const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::mat4& t,
         const glm::vec4& color, const float line_width, const RenderMode& render_mode
         ) {
-        const auto cmd = new TriangleCommand();
-        cmd->shape = DebugShape::TRIANGLE;
+        auto* cmd = new TriangleCommand();
+        cmd->shape = TRIANGLE;
         cmd->linewidth = line_width;
         cmd->rendermode = render_mode;
         cmd->color = color;
@@ -130,8 +131,8 @@ namespace Debug {
     void DrawQuad(
         const glm::mat4& transform, const glm::vec4& color, const RenderMode render_mode, const float line_width
         ) {
-        const auto cmd = new QuadCommand();
-        cmd->shape = DebugShape::QUAD;
+        auto* cmd = new QuadCommand();
+        cmd->shape = QUAD;
         cmd->transform = transform;
         cmd->linewidth = line_width;
         cmd->color = color;
@@ -178,8 +179,8 @@ namespace Debug {
     void DrawBox(
         const glm::mat4& transform, const glm::vec4& color, const RenderMode renderModes, const float lineWidth
         ) {
-        const auto cmd = new BoxCommand();
-        cmd->shape = DebugShape::BOX;
+        auto* cmd = new BoxCommand();
+        cmd->shape = BOX;
         cmd->transform = transform;
         cmd->linewidth = lineWidth;
         cmd->color = color;
@@ -188,8 +189,8 @@ namespace Debug {
     }
 
     void DrawGrid(const RenderMode renderModes, const float lineWidth) {
-        const auto cmd = new GridCommand();
-        cmd->shape = DebugShape::GRID;
+        auto* cmd = new GridCommand();
+        cmd->shape = GRID;
         cmd->rendermode = renderModes;
         cmd->linewidth = lineWidth;
         cmds.push(cmd);
@@ -201,7 +202,7 @@ namespace Debug {
     }
 
     void DrawRay(const Physics::Ray& ray, const glm::vec4& color, const float line_width) {
-        DrawLine(ray.orig, ray.orig + ray.dir, line_width, color, RenderMode::Normal);
+        DrawLine(ray.orig, ray.orig + ray.dir, line_width, color, Normal);
     }
 
     void DrawAABB(const Physics::AABB& aabb) {
@@ -212,7 +213,7 @@ namespace Debug {
             aabb.max_bound.y - aabb.min_bound.y,
             aabb.max_bound.z - aabb.min_bound.z,
             glm::vec4(0, 1, 0, 1),
-            RenderMode::WireFrame,
+            WireFrame,
             2.0f
             );
     }
@@ -257,7 +258,7 @@ namespace Debug {
                     t * glm::scale(glm::vec3(1.0f + 0.01f)),
                     glm::vec4(1,1,0,1),
                     1.0f,
-                    (cm_id.index == Core::CVarReadInt(r_draw_cm_id) && tri.selected) ? RenderMode::Normal : RenderMode::WireFrame
+                    (cm_id.index == Core::CVarReadInt(r_draw_cm_id) && tri.selected) ? Normal : WireFrame
                 );
                 if (Core::CVarReadInt(r_draw_cm_norm) != 0) {
                     Debug::DrawLine(
@@ -300,19 +301,19 @@ namespace Debug {
         const auto d = s[3].point;
         Debug::DrawTriangle(
             a, b, c, glm::mat4(1), glm::vec4(1, 0.5, 0.5, 1), 1,
-            static_cast<RenderMode>(RenderMode::WireFrame | RenderMode::AlwaysOnTop)
+            static_cast<RenderMode>(WireFrame | AlwaysOnTop)
             );
         Debug::DrawTriangle(
             a, d, b, glm::mat4(1), glm::vec4(1, 0.5, 0.5, 1), 1,
-            static_cast<RenderMode>(RenderMode::WireFrame | RenderMode::AlwaysOnTop)
+            static_cast<RenderMode>(WireFrame | AlwaysOnTop)
             );
         Debug::DrawTriangle(
             a, d, c, glm::mat4(1), glm::vec4(1, 0.5, 0.5, 1), 1,
-            static_cast<RenderMode>(RenderMode::WireFrame | RenderMode::AlwaysOnTop)
+            static_cast<RenderMode>(WireFrame | AlwaysOnTop)
             );
         Debug::DrawTriangle(
             b, c, d, glm::mat4(1), glm::vec4(1, 0.5, 0.5, 1), 1,
-            static_cast<RenderMode>(RenderMode::WireFrame | RenderMode::AlwaysOnTop)
+            static_cast<RenderMode>(WireFrame | AlwaysOnTop)
             );
     }
 
@@ -326,9 +327,9 @@ namespace Debug {
             fs::create_path_from_rel_s("shd/fs_debug.glsl").c_str()
             );
         Render::ShaderProgramId const progDebug = Render::ShaderResource::CompileShaderProgram({vsDebug, psDebug});
-        shaders[DebugShape::TRIANGLE] = Render::ShaderResource::GetProgramHandle(progDebug);
-        shaders[DebugShape::QUAD] = Render::ShaderResource::GetProgramHandle(progDebug);
-        shaders[DebugShape::BOX] = Render::ShaderResource::GetProgramHandle(progDebug);
+        shaders[TRIANGLE] = Render::ShaderResource::GetProgramHandle(progDebug);
+        shaders[QUAD] = Render::ShaderResource::GetProgramHandle(progDebug);
+        shaders[BOX] = Render::ShaderResource::GetProgramHandle(progDebug);
 
         Render::ShaderResourceId const vsLine = Render::ShaderResource::LoadShader(
             Render::ShaderResource::ShaderType::VERTEXSHADER,
@@ -339,7 +340,7 @@ namespace Debug {
             fs::create_path_from_rel_s("shd/fs_debug_lines.glsl").c_str()
             );
         Render::ShaderProgramId const progLine = Render::ShaderResource::CompileShaderProgram({vsLine, psLine});
-        shaders[DebugShape::LINE] = Render::ShaderResource::GetProgramHandle(progLine);
+        shaders[LINE] = Render::ShaderResource::GetProgramHandle(progLine);
 
         Render::ShaderResourceId const vsGrid = Render::ShaderResource::LoadShader(
             Render::ShaderResource::ShaderType::VERTEXSHADER,
@@ -350,15 +351,15 @@ namespace Debug {
             fs::create_path_from_rel_s("shd/fs_debug_grid.glsl").c_str()
             );
         Render::ShaderProgramId const progGrid = Render::ShaderResource::CompileShaderProgram({vsGrid, fsGrid});
-        shaders[DebugShape::GRID] = Render::ShaderResource::GetProgramHandle(progGrid);
+        shaders[GRID] = Render::ShaderResource::GetProgramHandle(progGrid);
     }
 
     void SetupLine() {
-        glGenVertexArrays(1, &vao[DebugShape::LINE]);
-        glBindVertexArray(vao[DebugShape::LINE]);
+        glGenVertexArrays(1, &vao[LINE]);
+        glBindVertexArray(vao[LINE]);
 
-        glGenBuffers(1, &vbo[DebugShape::LINE]);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[DebugShape::LINE]);
+        glGenBuffers(1, &vbo[LINE]);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[LINE]);
         // buffer some dummy data. We use uniforms for setting the positions and colors of the lines.
         glBufferData(GL_ARRAY_BUFFER, 2 * sizeof(float), NULL, GL_STATIC_DRAW);
 
@@ -385,18 +386,18 @@ namespace Debug {
             2, 0,
         };
 
-        glGenVertexArrays(1, &vao[DebugShape::TRIANGLE]);
-        glBindVertexArray(vao[DebugShape::TRIANGLE]);
+        glGenVertexArrays(1, &vao[TRIANGLE]);
+        glBindVertexArray(vao[TRIANGLE]);
 
-        glGenBuffers(1, &vbo[DebugShape::TRIANGLE]);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[DebugShape::TRIANGLE]);
+        glGenBuffers(1, &vbo[TRIANGLE]);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[TRIANGLE]);
         glBufferData(GL_ARRAY_BUFFER, mesh_size * sizeof(GLfloat), mesh, GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, NULL);
 
-        glGenBuffers(1, &ib[DebugShape::TRIANGLE]);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib[DebugShape::TRIANGLE]);
+        glGenBuffers(1, &ib[TRIANGLE]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib[TRIANGLE]);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
         glBindVertexArray(0);
@@ -425,18 +426,18 @@ namespace Debug {
             0, 3
         };
 
-        glGenVertexArrays(1, &vao[DebugShape::QUAD]);
-        glBindVertexArray(vao[DebugShape::QUAD]);
+        glGenVertexArrays(1, &vao[QUAD]);
+        glBindVertexArray(vao[QUAD]);
 
-        glGenBuffers(1, &vbo[DebugShape::QUAD]);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[DebugShape::QUAD]);
+        glGenBuffers(1, &vbo[QUAD]);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[QUAD]);
         glBufferData(GL_ARRAY_BUFFER, mesh_size * sizeof(GLfloat), mesh, GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, NULL);
 
-        glGenBuffers(1, &ib[DebugShape::QUAD]);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib[DebugShape::QUAD]);
+        glGenBuffers(1, &ib[QUAD]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib[QUAD]);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
         glBindVertexArray(0);
@@ -489,18 +490,18 @@ namespace Debug {
             3, 7
         };
 
-        glGenVertexArrays(1, &vao[DebugShape::BOX]);
-        glBindVertexArray(vao[DebugShape::BOX]);
+        glGenVertexArrays(1, &vao[BOX]);
+        glBindVertexArray(vao[BOX]);
 
-        glGenBuffers(1, &vbo[DebugShape::BOX]);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[DebugShape::BOX]);
+        glGenBuffers(1, &vbo[BOX]);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[BOX]);
         glBufferData(GL_ARRAY_BUFFER, meshSize * sizeof(GLfloat), mesh, GL_STATIC_DRAW);
 
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 3, NULL);
 
-        glGenBuffers(1, &ib[DebugShape::BOX]);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib[DebugShape::BOX]);
+        glGenBuffers(1, &ib[BOX]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib[BOX]);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
         glBindVertexArray(0);
@@ -516,7 +517,7 @@ namespace Debug {
         const std::array<float32, GRIDSIZE * 16> GenerateLineBuffer() {
             std::array<float32, GRIDSIZE * 16> arr = {};
 
-            const float32 scale = 1.0f;
+            constexpr auto scale = 1.0f;
             const float32 max = (GRIDSIZE / 2); // top right
             const float32 min = -max; // top left
 
@@ -553,12 +554,12 @@ namespace Debug {
 
     void SetupGrid() {
         const auto buf = Internal::GenerateLineBuffer<Internal::gridSize>();
-        glGenBuffers(1, &vbo[DebugShape::GRID]);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[DebugShape::GRID]);
+        glGenBuffers(1, &vbo[GRID]);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[GRID]);
         glBufferData(GL_ARRAY_BUFFER, buf.size() * sizeof(float32), buf.data(), GL_STATIC_DRAW);
 
-        glGenVertexArrays(1, &vao[DebugShape::GRID]);
-        glBindVertexArray(vao[DebugShape::GRID]);
+        glGenVertexArrays(1, &vao[GRID]);
+        glBindVertexArray(vao[GRID]);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float32) * 4, NULL);
         glBindVertexArray(0);
@@ -584,11 +585,11 @@ namespace Debug {
     }
 
     void RenderLine(RenderCommand* command) {
-        LineCommand* lineCommand = (LineCommand*)command;
+        auto* lineCommand = static_cast<LineCommand*>(command);
 
-        glUseProgram(shaders[DebugShape::LINE]);
+        glUseProgram(shaders[LINE]);
 
-        if ((lineCommand->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop) {
+        if ((lineCommand->rendermode & AlwaysOnTop) == AlwaysOnTop) {
             glDepthFunc(GL_ALWAYS);
             glDepthRange(0.0f, 0.01f);
         }
@@ -596,14 +597,14 @@ namespace Debug {
         glPolygonMode(GL_FRONT, GL_LINE);
         glLineWidth(lineCommand->linewidth);
 
-        glBindVertexArray(vao[DebugShape::LINE]);
+        glBindVertexArray(vao[LINE]);
 
         // This is so dumb, yet so much fun
-        static GLuint v0pos = glGetUniformLocation(shaders[DebugShape::LINE], "v0pos");
-        static GLuint v1pos = glGetUniformLocation(shaders[DebugShape::LINE], "v1pos");
-        static GLuint v0color = glGetUniformLocation(shaders[DebugShape::LINE], "v0color");
-        static GLuint v1color = glGetUniformLocation(shaders[DebugShape::LINE], "v1color");
-        static GLuint viewProjection = glGetUniformLocation(shaders[DebugShape::LINE], "viewProjection");
+        static GLint v0pos = glGetUniformLocation(shaders[LINE], "v0pos");
+        static GLint v1pos = glGetUniformLocation(shaders[LINE], "v1pos");
+        static GLint v0color = glGetUniformLocation(shaders[LINE], "v0color");
+        static GLint v1color = glGetUniformLocation(shaders[LINE], "v1color");
+        static GLint viewProjection = glGetUniformLocation(shaders[LINE], "viewProjection");
 
         // Upload uniforms for positions and colors
         glUniform4fv(v0pos, 1, &lineCommand->startpoint[0]);
@@ -611,7 +612,7 @@ namespace Debug {
         glUniform4fv(v0color, 1, &lineCommand->startcolor[0]);
         glUniform4fv(v1color, 1, &lineCommand->endcolor[0]);
 
-        Render::Camera* const mainCamera = Render::CameraManager::GetCamera(CAMERA_MAIN);
+        const Render::Camera* const mainCamera = Render::CameraManager::GetCamera(CAMERA_MAIN);
         glUniformMatrix4fv(viewProjection, 1, GL_FALSE, &mainCamera->viewProjection[0][0]);
 
         glDrawArrays(GL_LINES, 0, 2);
@@ -621,7 +622,7 @@ namespace Debug {
 
         glPolygonMode(GL_FRONT, GL_FILL);
 
-        if ((lineCommand->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop) {
+        if ((lineCommand->rendermode & AlwaysOnTop) == AlwaysOnTop) {
             glDepthFunc(GL_LEQUAL);
             glDepthRange(0.0f, 1.0f);
         }
@@ -637,37 +638,37 @@ namespace Debug {
             cmd->ps[2].x, cmd->ps[2].y, cmd->ps[2].z,
         };
 
-        glUseProgram(shaders[DebugShape::TRIANGLE]);
-        glBindVertexArray(vao[DebugShape::TRIANGLE]);
+        glUseProgram(shaders[TRIANGLE]);
+        glBindVertexArray(vao[TRIANGLE]);
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[DebugShape::TRIANGLE]);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[TRIANGLE]);
         glBufferData(GL_ARRAY_BUFFER, mesh_size * sizeof(GLfloat), mesh, GL_STATIC_DRAW);
 
-        const GLuint loc = glGetUniformLocation(shaders[DebugShape::TRIANGLE], "color");
+        const GLint loc = glGetUniformLocation(shaders[TRIANGLE], "color");
         glUniform4fv(loc, 1, &cmd->color.x);
 
-        static GLuint model = glGetUniformLocation(shaders[DebugShape::TRIANGLE], "model");
-        static GLuint viewProjection = glGetUniformLocation(shaders[DebugShape::TRIANGLE], "viewProjection");
+        static GLint model = glGetUniformLocation(shaders[TRIANGLE], "model");
+        static GLint viewProjection = glGetUniformLocation(shaders[TRIANGLE], "viewProjection");
         const Render::Camera* const mainCamera = Render::CameraManager::GetCamera(CAMERA_MAIN);
         glUniformMatrix4fv(model, 1, GL_FALSE, &cmd->transform[0][0]);
         glUniformMatrix4fv(viewProjection, 1, GL_FALSE, &mainCamera->viewProjection[0][0]);
 
         glDisable(GL_CULL_FACE);
-        if ((cmd->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop) {
+        if ((cmd->rendermode & AlwaysOnTop) == AlwaysOnTop) {
             glDepthFunc(GL_ALWAYS);
             glDepthRange(0.0f, 0.01f);
         }
 
-        if ((cmd->rendermode & RenderMode::WireFrame) == RenderMode::WireFrame) {
+        if ((cmd->rendermode & WireFrame) == WireFrame) {
             glPolygonMode(GL_FRONT, GL_LINE);
             glLineWidth(cmd->linewidth);
 
-            glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, (void*)(3 * sizeof(GLuint)));
+            glDrawElements(GL_LINES, 6, GL_UNSIGNED_INT, reinterpret_cast<void*>(3 * sizeof(GLuint)));
             glPolygonMode(GL_FRONT, GL_FILL);
         }
         else { glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL); }
 
-        if ((cmd->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop) {
+        if ((cmd->rendermode & AlwaysOnTop) == AlwaysOnTop) {
             glDepthFunc(GL_LEQUAL);
             glDepthRange(0.0f, 1.0f);
         }
@@ -679,34 +680,34 @@ namespace Debug {
     void RenderQuad(RenderCommand* command) {
         const auto cmd = static_cast<QuadCommand*>(command);
 
-        glUseProgram(shaders[DebugShape::QUAD]);
-        glBindVertexArray(vao[DebugShape::QUAD]);
+        glUseProgram(shaders[QUAD]);
+        glBindVertexArray(vao[QUAD]);
 
-        const GLuint loc = glGetUniformLocation(shaders[DebugShape::QUAD], "color");
+        const GLint loc = glGetUniformLocation(shaders[QUAD], "color");
         glUniform4fv(loc, 1, &cmd->color.x);
 
-        static GLuint model = glGetUniformLocation(shaders[DebugShape::QUAD], "model");
-        static GLuint viewProjection = glGetUniformLocation(shaders[DebugShape::QUAD], "viewProjection");
+        static GLint model = glGetUniformLocation(shaders[QUAD], "model");
+        static GLint viewProjection = glGetUniformLocation(shaders[QUAD], "viewProjection");
         const Render::Camera* const mainCamera = Render::CameraManager::GetCamera(CAMERA_MAIN);
         glUniformMatrix4fv(model, 1, GL_FALSE, &cmd->transform[0][0]);
         glUniformMatrix4fv(viewProjection, 1, GL_FALSE, &mainCamera->viewProjection[0][0]);
 
         glDisable(GL_CULL_FACE);
-        if ((cmd->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop) {
+        if ((cmd->rendermode & AlwaysOnTop) == AlwaysOnTop) {
             glDepthFunc(GL_ALWAYS);
             glDepthRange(0.0f, 0.01f);
         }
 
-        if ((cmd->rendermode & RenderMode::WireFrame) == RenderMode::WireFrame) {
+        if ((cmd->rendermode & WireFrame) == WireFrame) {
             glPolygonMode(GL_FRONT, GL_LINE);
             glLineWidth(cmd->linewidth);
 
-            glDrawElements(GL_LINES, 12, GL_UNSIGNED_INT, (void*)(6 * sizeof(GLuint)));
+            glDrawElements(GL_LINES, 12, GL_UNSIGNED_INT, reinterpret_cast<void*>(6 * sizeof(GLuint)));
             glPolygonMode(GL_FRONT, GL_FILL);
         }
         else { glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL); }
 
-        if ((cmd->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop) {
+        if ((cmd->rendermode & AlwaysOnTop) == AlwaysOnTop) {
             glDepthFunc(GL_LEQUAL);
             glDepthRange(0.0f, 1.0f);
         }
@@ -716,36 +717,36 @@ namespace Debug {
     }
 
     void RenderBox(RenderCommand* command) {
-        BoxCommand* cmd = (BoxCommand*)command;
+        const auto* cmd = static_cast<BoxCommand*>(command);
 
-        glUseProgram(shaders[DebugShape::BOX]);
+        glUseProgram(shaders[BOX]);
 
-        glBindVertexArray(vao[DebugShape::BOX]);
+        glBindVertexArray(vao[BOX]);
 
-        GLuint loc = glGetUniformLocation(shaders[DebugShape::BOX], "color");
+        static GLint loc = glGetUniformLocation(shaders[BOX], "color");
         glUniform4fv(loc, 1, &cmd->color.x);
 
-        static GLuint model = glGetUniformLocation(shaders[DebugShape::BOX], "model");
-        static GLuint viewProjection = glGetUniformLocation(shaders[DebugShape::BOX], "viewProjection");
-        Render::Camera* const mainCamera = Render::CameraManager::GetCamera(CAMERA_MAIN);
+        static GLint model = glGetUniformLocation(shaders[BOX], "model");
+        static GLint viewProjection = glGetUniformLocation(shaders[BOX], "viewProjection");
+        const Render::Camera* const mainCamera = Render::CameraManager::GetCamera(CAMERA_MAIN);
         glUniformMatrix4fv(model, 1, GL_FALSE, &cmd->transform[0][0]);
         glUniformMatrix4fv(viewProjection, 1, GL_FALSE, &mainCamera->viewProjection[0][0]);
 
-        if ((cmd->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop) {
+        if ((cmd->rendermode & AlwaysOnTop) == AlwaysOnTop) {
             glDepthFunc(GL_ALWAYS);
             glDepthRange(0.0f, 0.01f);
         }
 
-        if ((cmd->rendermode & RenderMode::WireFrame) == RenderMode::WireFrame) {
+        if ((cmd->rendermode & WireFrame) == WireFrame) {
             glPolygonMode(GL_FRONT, GL_LINE);
             glLineWidth(cmd->linewidth);
 
-            glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, (void*)(36 * sizeof(GLuint)));
+            glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, reinterpret_cast<void*>(36 * sizeof(GLuint)));
             glPolygonMode(GL_FRONT, GL_FILL);
         }
         else { glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, NULL); }
 
-        if ((cmd->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop) {
+        if ((cmd->rendermode & AlwaysOnTop) == AlwaysOnTop) {
             glDepthFunc(GL_LEQUAL);
             glDepthRange(0.0f, 1.0f);
         }
@@ -753,12 +754,10 @@ namespace Debug {
         glBindVertexArray(0);
     }
 
-    void RenderGrid(RenderCommand* command) {
-        auto cmd = static_cast<GridCommand*>(command);
-
-        glUseProgram(shaders[DebugShape::GRID]);
-        glBindVertexArray(vao[DebugShape::GRID]);
-        Render::Camera* const mainCamera = Render::CameraManager::GetCamera(CAMERA_MAIN);
+    void RenderGrid(RenderCommand*) {
+        glUseProgram(shaders[GRID]);
+        glBindVertexArray(vao[GRID]);
+        const Render::Camera* const mainCamera = Render::CameraManager::GetCamera(CAMERA_MAIN);
         glUniformMatrix4fv(0, 1, false, &mainCamera->viewProjection[0][0]);
         glDrawArrays(GL_LINES, 0, Internal::gridSize * 2 * 2);
         glBindVertexArray(0);
@@ -769,23 +768,23 @@ namespace Debug {
             RenderCommand* currentCommand = cmds.front();
             cmds.pop();
             switch (currentCommand->shape) {
-            case DebugShape::LINE: {
+            case LINE: {
                 RenderLine(currentCommand);
                 break;
             }
-            case DebugShape::TRIANGLE: {
+            case TRIANGLE: {
                 RenderTriangle(currentCommand);
                 break;
             }
-            case DebugShape::QUAD: {
+            case QUAD: {
                 RenderQuad(currentCommand);
                 break;
             }
-            case DebugShape::BOX: {
+            case BOX: {
                 RenderBox(currentCommand);
                 break;
             }
-            case DebugShape::GRID: {
+            case GRID: {
                 RenderGrid(currentCommand);
                 break;
             }

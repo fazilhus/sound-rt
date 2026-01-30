@@ -81,7 +81,7 @@ namespace Util {
         if (this->generations[i.index] <= 0x3FF)
             printf("WARNING: Id generation overflow!");
 #endif
-        this->generations[i.index]++;
+        ++this->generations[i.index];
     }
 
     //------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ namespace Util {
     */
     template <typename ID_T>
     bool IdPool<ID_T>::IsValid(ID_T i) const {
-        return i.index < (uint32_t)this->generations.size() &&
+        return i.index < static_cast<uint32_t>(this->generations.size()) &&
             i.generation == this->generations[i.index];
     }
 }

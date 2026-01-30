@@ -10,7 +10,6 @@
 #include "renderdevice.h"
 #include "shaderresource.h"
 #include "lightsources.h"
-#include <vector>
 
 #define CAMERA_SHADOW uint('GSHW')
 
@@ -31,19 +30,19 @@ namespace Render {
         void Initialize();
         void UpdateWorkGroups(uint resolutionWidth, uint resolutionHeight);
         void OnBeforeRender();
-        void Update(Render::ShaderProgramId pid);
+        void Update(ShaderProgramId pid);
 
         void BindPointLightBuffers();
 
         void DebugDrawPointLights();
 
         bool IsValid(PointLightId id);
-        PointLightId CreatePointLight(glm::vec3 position, glm::vec3 color, float intensity, float radius);
+        PointLightId CreatePointLight(const glm::vec3& position, const glm::vec3& color, float intensity, float radius);
         void DestroyPointLight(PointLightId id);
 
-        void SetPosition(PointLightId id, glm::vec3 position);
+        void SetPosition(PointLightId id, const glm::vec3& position);
         glm::vec3 GetPosition(PointLightId id);
-        void SetColorAndIntensity(PointLightId id, glm::vec3 color, float intensity);
+        void SetColorAndIntensity(PointLightId id, const glm::vec3& color, float intensity);
         glm::vec3 GetColorAndIntensity(PointLightId id);
         void SetRadius(PointLightId id, float radius);
         float GetRadius(PointLightId id);

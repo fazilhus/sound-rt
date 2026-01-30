@@ -15,7 +15,7 @@ namespace Render {
         uint32_t generation: 10; // 1024 generations per index
 
         static PointLightId Create(uint32_t id) {
-            PointLightId ret;
+            PointLightId ret{};
             ret.index = id & 0x003FFFFF;
             ret.generation = (id & 0xFFC0000) >> 22;
             return ret;
@@ -23,10 +23,10 @@ namespace Render {
 
         explicit constexpr operator uint32_t() const { return ((generation << 22) & 0xFFC0000) + (index & 0x003FFFFF); }
         static constexpr PointLightId Invalid() { return {0xFFFFFFFF, 0xFFFFFFFF}; }
-        constexpr uint32_t HashCode() const { return index; }
-        const bool operator==(const PointLightId& rhs) const { return uint32_t(*this) == uint32_t(rhs); }
-        const bool operator!=(const PointLightId& rhs) const { return uint32_t(*this) != uint32_t(rhs); }
-        const bool operator<(const PointLightId& rhs) const { return index < rhs.index; }
-        const bool operator>(const PointLightId& rhs) const { return index > rhs.index; }
+        [[nodiscard]] constexpr uint32_t HashCode() const { return index; }
+        bool operator==(const PointLightId& rhs) const { return static_cast<uint32_t>(*this) == static_cast<uint32_t>(rhs); }
+        bool operator!=(const PointLightId& rhs) const { return static_cast<uint32_t>(*this) != static_cast<uint32_t>(rhs); }
+        bool operator<(const PointLightId& rhs) const { return index < rhs.index; }
+        bool operator>(const PointLightId& rhs) const { return index > rhs.index; }
     };
 } // namespace Render

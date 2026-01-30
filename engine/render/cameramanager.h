@@ -20,8 +20,8 @@ namespace Render {
     struct CameraCreateInfo {
         /// camera hash number. Ex. 'ABC1'
         uint32_t hash = 0;
-        glm::mat4 view;
-        glm::mat4 projection;
+        glm::mat4 view{};
+        glm::mat4 projection{};
     };
 
     //------------------------------------------------------------------------------
@@ -44,12 +44,12 @@ namespace Render {
         void Create();
 
         /// create a camera. The global camera manager handles the cameras.
-        Camera* const CreateCamera(CameraCreateInfo const& info);
+        Camera* CreateCamera(CameraCreateInfo const& info);
 
-        void UpdateCamera(Camera* const camera);
+        void UpdateCamera(Camera* camera);
 
         /// get a camera by hash
-        Camera* const GetCamera(uint32_t CAMERA_HASH);
+        Camera* GetCamera(uint32_t CAMERA_HASH);
 
         void Destroy();
         void OnBeforeRender();

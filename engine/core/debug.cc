@@ -8,37 +8,13 @@
 #include <cstdarg>
 //------------------------------------------------------------------------------
 /**
-    This function is called by n_assert() when the assertion fails.
 */
-void n_barf(const char* exp, const char* file, int line) {
-    std::string msg = "*** ASSERTION ***\n";
-    msg += file;
-    msg += "(";
-    msg += line;
-    msg += ")\n";
-    msg += "expression: ";
-    msg += exp;
-    msg += "\n";
-    n_error("%s", msg.c_str());
-}
-
-//------------------------------------------------------------------------------
-/**
-    This function is called by n_assert2() when the assertion fails.
-*/
-void n_barf2(const char* exp, const char* msg, const char* file, int line) {
-    std::string str = "*** ASSERTION ***\n";
-    str += file;
-    str += "(";
-    str += line;
-    str += ")\n";
-    str += "expression: ";
-    str += exp;
-    str += "\n";
-    str += "programmer says: ";
-    str += msg;
-    str += "\n";
-    n_error("%s", str.c_str());
+void __cdecl
+n_printf(const char* msg, ...) {
+    va_list argList;
+    va_start(argList, msg);
+    vprintf(msg, argList);
+    va_end(argList);
 }
 
 //------------------------------------------------------------------------------
@@ -71,11 +47,35 @@ n_warning(const char* msg, ...) {
 
 //------------------------------------------------------------------------------
 /**
+    This function is called by n_assert() when the assertion fails.
 */
-void __cdecl
-n_printf(const char* msg, ...) {
-    va_list argList;
-    va_start(argList, msg);
-    vprintf(msg, argList);
-    va_end(argList);
+void n_barf(const char* exp, const char* file, int line) {
+    std::string msg = "*** ASSERTION ***\n";
+    msg += file;
+    msg += "(";
+    msg += std::to_string(line);
+    msg += ")\n";
+    msg += "expression: ";
+    msg += exp;
+    msg += "\n";
+    n_error("%s", msg.c_str());
+}
+
+//------------------------------------------------------------------------------
+/**
+    This function is called by n_assert2() when the assertion fails.
+*/
+void n_barf2(const char* exp, const char* msg, const char* file, int line) {
+    std::string str = "*** ASSERTION ***\n";
+    str += file;
+    str += "(";
+    str += std::to_string(line);
+    str += ")\n";
+    str += "expression: ";
+    str += exp;
+    str += "\n";
+    str += "programmer says: ";
+    str += msg;
+    str += "\n";
+    n_error("%s", str.c_str());
 }

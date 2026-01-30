@@ -61,5 +61,5 @@ namespace Core {
     //------------------------------------------------------------------------------
     /**
 */
-    int App::ExitCode() { return this->exitCode; }
+    int App::ExitCode() const { return this->exitCode; }
 } // namespace Application
