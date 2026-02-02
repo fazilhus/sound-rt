@@ -13,6 +13,14 @@ namespace Physics {
         Custom,
     };
 
+    namespace CollisionMask {
+        enum : uint16_t {
+            None = 0,
+            Physics = 1 << 0,
+            Audio = 1 << 1
+        };
+    }
+
     struct State {
         struct Dyn {
             glm::vec3 pos = glm::vec3(0);
@@ -46,6 +54,7 @@ namespace Physics {
         std::vector<AABB> aabbs;
         std::vector<glm::mat4> transforms;
         std::vector<State> states;
+        std::vector<uint16_t> masks;
     };
 
     constexpr auto gravity = glm::vec3(0, -9.81f, 0);
@@ -55,26 +64,27 @@ namespace Physics {
 
     ColliderId create_rigidbody(
         ColliderMeshId cm_id, const glm::vec3& orig, const glm::vec3& translation, const glm::quat& rotation,
-        const glm::vec3& scale = glm::vec3(1.0f), float mass = 1.0f, ShapeType type = ShapeType::Box
+        const glm::vec3& scale = glm::vec3(1.0f), float mass = 1.0f, ShapeType type = ShapeType::Box,
+        uint16_t mask = 0
         );
     ColliderId create_rigidbody(
         ColliderMeshId cm_id, const glm::vec3& orig, const glm::vec3& translation, const glm::quat& rotation,
-        float scale = 1.0f, float mass = 1.0f, ShapeType type = ShapeType::Box
+        float scale = 1.0f, float mass = 1.0f, ShapeType type = ShapeType::Box, uint16_t mask = 0
         );
     ColliderId create_staticbody(
         ColliderMeshId cm_id, const glm::vec3& orig, const glm::vec3& translation, const glm::quat& rotation,
-        const glm::vec3& scale = glm::vec3(1.0f)
+        const glm::vec3& scale = glm::vec3(1.0f), uint16_t mask = 0
         );
     ColliderId create_staticbody(
         ColliderMeshId cm_id, const glm::vec3& orig, const glm::vec3& translation, const glm::quat& rotation,
-        float scale = 1.0f
+        float scale = 1.0f, uint16_t mask = 0
         );
     void set_transform(ColliderId collider, const glm::mat4& t);
 
     void init_debug();
 
-    bool cast_ray(const Ray& ray, HitInfo& hit);
-    bool cast_ray(const glm::vec3& start, const glm::vec3& dir, HitInfo& hit);
+    bool cast_ray(const Ray& ray, HitInfo& hit, uint16_t mask = 0);
+    bool cast_ray(const glm::vec3& start, const glm::vec3& dir, HitInfo& hit, uint16_t mask = 0);
 
     void add_center_impulse(ColliderId collider, const glm::vec3& dir);
     void add_impulse(ColliderId collider, const glm::vec3& loc, const glm::vec3& dir);
@@ -88,8 +98,7 @@ namespace Physics {
     void sort_and_sweep(std::vector<AABBPair>& aabb_pairs);
 
     bool gjk(ColliderId a_id, ColliderId b_id, Simplex& out_simplex);
-    // CollisionInfo epa(const Simplex& simplex, ColliderId a_id, ColliderId b_id);
-    CollisionInfo epa2(const Simplex& simplex, ColliderId a_id, ColliderId b_id);
+    CollisionInfo epa(const Simplex& simplex, ColliderId a_id, ColliderId b_id);
     void collision_solver(const CollisionInfo& collision_info, ColliderId a_id, ColliderId b_id, float dt);
 
 } // namespace Physics

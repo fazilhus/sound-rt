@@ -105,7 +105,8 @@ namespace Game {
                 Physics::get_collider_meshes().complex[cubecmesh.index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(10.0f, 1.0f, 10.0f)
+                glm::vec3(10.0f, 1.0f, 10.0f),
+                Physics::CollisionMask::Physics
                 );
             cubes.emplace_back(cube);
         }
@@ -174,7 +175,7 @@ namespace Game {
             if (kbd->pressed[Input::Key::Code::End]) { ShaderResource::ReloadShaders(); }
 
             if (kbd->held[Input::Key::LeftControl] && mouse->held[Input::Mouse::Button::LeftButton]) {
-                r = this->camera->SpawnRay();
+                r = DebugCamera::SpawnRay();
                 const auto aabb = Core::CVarGet("r_draw_aabb");
                 const auto aabb_id = Core::CVarGet("r_draw_aabb_id");
                 const auto cm_id = Core::CVarGet("r_draw_cm_id");
@@ -239,7 +240,7 @@ namespace Game {
     //------------------------------------------------------------------------------
     /**
     */
-    void SpaceGameApp::RenderUI() {
+    void SpaceGameApp::RenderUI() const {
         if (this->window->IsOpen()) {
             ImGui::Begin("Debug");
 

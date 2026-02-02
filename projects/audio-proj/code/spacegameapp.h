@@ -17,18 +17,18 @@ namespace Game {
         /// constructor
         SpaceGameApp();
         /// destructor
-        ~SpaceGameApp();
+        ~SpaceGameApp() override;
 
         /// open app
-        bool Open();
+        bool Open() override;
         /// run app
-        void Run();
+        void Run() override;
         /// exit app
-        void Exit();
+        void Exit() override;
 
     private:
         /// show some ui things
-        void RenderUI();
+        void RenderUI() const;
 
         Display::Window* window;
         Render::DebugCamera* camera;

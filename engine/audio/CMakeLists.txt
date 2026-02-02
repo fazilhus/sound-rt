@@ -3,7 +3,10 @@
 #--------------------------------------------------------------------------
 
 SET(files_audio
-
+    listener.h
+    listener.cc
+    emitter.cc
+    emitter.h
 )
 SOURCE_GROUP("audio" FILES ${files_audio})
 
