@@ -52,4 +52,16 @@ namespace Math {
         return a + 0.5f * q;
     }
 
+    inline glm::vec3 to_wrong_hand_system(const glm::vec3& v) {
+        return glm::vec3(-v.x, v.y, v.z);
+    }
+
+    inline glm::vec3 forward_from_quat(const glm::quat& q) {
+        return glm::vec3(
+            2 * (q.x * q.z + q.w * q.y),
+            2 * (q.y * q.z - q.w * q.x),
+            1 - 2 * (q.x * q.x + q.y * q.y)
+        );
+    }
+
 }

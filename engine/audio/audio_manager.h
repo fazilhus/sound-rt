@@ -31,7 +31,7 @@ namespace Audio {
 
         void set_emitter_collider(Physics::ColliderId cid);
 
-        void update_listener_position(const glm::vec3& position);
+        void update_listener_pos_and_at(const glm::vec3& position, const glm::quat& rot);
         void update_emitter_position(const glm::vec3& position);
 
         void update();

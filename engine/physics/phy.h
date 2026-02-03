@@ -15,9 +15,10 @@ namespace Physics {
 
     namespace CollisionMask {
         enum : uint16_t {
-            Physics = 1 << 0,
-            Audio = 1 << 1,
-            None = 1 << 15,
+            None = 1 << 0,
+            Physics = 1 << 1,
+            Audio = 1 << 2,
+            All = (1 << 16) - 1,
         };
     }
 
@@ -83,8 +84,8 @@ namespace Physics {
 
     void init_debug();
 
-    bool cast_ray(const Ray& ray, HitInfo& hit, uint16_t mask = 0);
-    bool cast_ray(const glm::vec3& start, const glm::vec3& dir, HitInfo& hit, uint16_t mask = 0);
+    bool cast_ray(const Ray& ray, HitInfo& hit, uint16_t mask = CollisionMask::All);
+    bool cast_ray(const glm::vec3& start, const glm::vec3& dir, HitInfo& hit, uint16_t mask = CollisionMask::All);
 
     void add_center_impulse(ColliderId collider, const glm::vec3& dir);
     void add_impulse(ColliderId collider, const glm::vec3& loc, const glm::vec3& dir);

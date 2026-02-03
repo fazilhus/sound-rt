@@ -38,7 +38,8 @@ namespace Game {
     //------------------------------------------------------------------------------
     /**
     */
-    SpaceGameApp::SpaceGameApp() : window(nullptr), camera(nullptr), deltaTime(1.0f / 60.0f) {
+    SpaceGameApp::SpaceGameApp()
+        : window(nullptr), camera(nullptr), deltaTime(1.0f / 60.0f) {
         // empty
     }
 
@@ -79,7 +80,9 @@ namespace Game {
         int w;
         int h;
         this->window->GetSize(w, h);
-        glm::mat4 projection = glm::perspective(glm::radians(90.0f), static_cast<float>(w) / static_cast<float>(h), 0.01f, 1000.f);
+        glm::mat4 projection = glm::perspective(
+            glm::radians(90.0f), static_cast<float>(w) / static_cast<float>(h), 0.01f, 1000.f
+            );
         Camera* cam = CameraManager::GetCamera(CAMERA_MAIN);
         cam->projection = projection;
 
@@ -107,7 +110,49 @@ namespace Game {
                 translation,
                 glm::quat(),
                 glm::vec3(100.0f, 1.0f, 100.0f),
-                Physics::CollisionMask::Physics
+                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
+                );
+            cubes.emplace_back(cube);
+        }
+        {
+            std::tuple<ModelId, Physics::ColliderId> cube;
+            std::get<0>(cube) = cubemesh;
+            constexpr auto translation = glm::vec3(0.0f, 1.0f, 6.0f);
+            std::get<1>(cube) = Physics::create_staticbody(
+                cubecmesh,
+                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                translation,
+                glm::quat(),
+                glm::vec3(7.5f, 2.0f, 0.1f),
+                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
+                );
+            cubes.emplace_back(cube);
+        }
+        {
+            std::tuple<ModelId, Physics::ColliderId> cube;
+            std::get<0>(cube) = cubemesh;
+            constexpr auto translation = glm::vec3(7.5f, 1.0f, 0.0f);
+            std::get<1>(cube) = Physics::create_staticbody(
+                cubecmesh,
+                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                translation,
+                glm::quat(),
+                glm::vec3(0.1f, 2.0f, 7.5f),
+                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
+                );
+            cubes.emplace_back(cube);
+        }
+        {
+            std::tuple<ModelId, Physics::ColliderId> cube;
+            std::get<0>(cube) = cubemesh;
+            constexpr auto translation = glm::vec3(-7.5f, 1.0f, 0.0f);
+            std::get<1>(cube) = Physics::create_staticbody(
+                cubecmesh,
+                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                translation,
+                glm::quat(),
+                glm::vec3(0.1f, 2.0f, 7.5f),
+                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             cubes.emplace_back(cube);
         }
@@ -115,15 +160,13 @@ namespace Game {
         {
             std::tuple<ModelId, Physics::ColliderId> cube;
             std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, 1.0f, 5.0f);
-            std::get<1>(cube) = Physics::create_rigidbody(
+            constexpr auto translation = glm::vec3(0.0f, 0.5f, 1.0f);
+            std::get<1>(cube) = Physics::create_staticbody(
                 cubecmesh,
                 Physics::get_collider_meshes().complex[cubecmesh.index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(1.0f, 1.0f, 1.0f),
-                1.0f,
-                Physics::ShapeType::Box,
+                glm::vec3(0.5f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             cubes.emplace_back(cube);
@@ -133,15 +176,13 @@ namespace Game {
         {
             std::tuple<ModelId, Physics::ColliderId> cube;
             std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, 5.0f, 10.0f);
-            std::get<1>(cube) = Physics::create_rigidbody(
+            constexpr auto translation = glm::vec3(0.0f, 0.5f, 3.0f);
+            std::get<1>(cube) = Physics::create_staticbody(
                 cubecmesh,
                 Physics::get_collider_meshes().complex[cubecmesh.index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(1.0f, 1.0f, 1.0f),
-                1.0f,
-                Physics::ShapeType::Box,
+                glm::vec3(0.5f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             sound_cube = std::get<1>(cube);
@@ -172,7 +213,7 @@ namespace Game {
         constexpr auto numLights = 40;
         // Setup lights
         for (PointLightId lights[numLights];
-             auto & light : lights) {
+             auto& light: lights) {
             glm::vec3 translation = glm::vec3(
                 Core::RandomFloatNTP() * 20.0f,
                 Core::RandomFloatNTP() * 20.0f,
@@ -189,6 +230,7 @@ namespace Game {
         }
 
         Audio::audio_manager::get_instance().set_emitter_collider(sound_cube);
+        Audio::audio_manager::get_instance().update_emitter_position(Physics::get_colliders().states[sound_cube.index].dyn.pos);
 
         Physics::Ray r(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
         Physics::HitInfo hit;
@@ -237,12 +279,11 @@ namespace Game {
 
             Physics::step(this->deltaTime);
 
-            Audio::audio_manager::get_instance().update_listener_position(camera->pos);
-            Audio::audio_manager::get_instance().update_emitter_position(Physics::get_colliders().states[sound_cube.index].dyn.pos);
+            Audio::audio_manager::get_instance().update_listener_pos_and_at(camera->pos, camera->ort);
             Audio::audio_manager::get_instance().update();
 
             // Store all drawcalls in the render device
-            for (auto& [model, collider] : cubes) {
+            for (auto& [model, collider]: cubes) {
                 RenderDevice::Draw(model, Physics::get_colliders().transforms[collider.index]);
             }
 

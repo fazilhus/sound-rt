@@ -5,6 +5,7 @@
 #include "config.h"
 #include "audio_manager.h"
 
+#include "core/maths.h"
 #include "physics/phy.h"
 #include "physics/ray.h"
 
@@ -35,10 +36,13 @@ namespace Audio {
         m_emitter.m_self_collider = cid;
     }
 
-    void audio_manager::update_listener_position(const glm::vec3& position) {
+    void audio_manager::update_listener_pos_and_at(const glm::vec3& position, const glm::quat& rot) {
         m_listener.m_position = position;
+        m_listener.m_rotation = rot;
         m_listener.m_transform = glm::translate(m_listener.m_position) * glm::mat4(m_listener.m_rotation);
         m_soloud.set3dListenerPosition(m_listener.m_position.x, m_listener.m_position.y, m_listener.m_position.z);
+        const auto fwd = Math::forward_from_quat(m_listener.m_rotation);
+        m_soloud.set3dListenerAt(fwd.x, fwd.y, fwd.z);
         b_should_update = true;
     }
 
@@ -61,7 +65,7 @@ namespace Audio {
         Physics::HitInfo info;
         auto b_res = Physics::cast_ray(ray, info, Physics::CollisionMask::Audio);
         b_res = b_res && info.collider != m_emitter.m_self_collider;
-        m_soloud.setPause(m_handle, b_res);
+        m_soloud.setVolume(m_handle, b_res ? 0.0f : m_emitter.m_volume);
     }
 
 } // Audio

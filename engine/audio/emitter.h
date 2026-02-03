@@ -19,5 +19,6 @@ namespace Audio {
         Physics::ColliderId m_self_collider;
         float m_rolloff{0.75f};
         float m_min_dist{5.0f}, m_max_dist{50.0f};
+        float m_volume{1.0f};
     };
 } // Audio
