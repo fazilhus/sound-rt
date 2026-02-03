@@ -19,14 +19,15 @@
 #include <chrono>
 #include <thread>
 
-#include "soloud.h"
-#include "soloud_wav.h"
+#include "audio/audio_manager.h"
 #include "fx/gltf.h"
 
 #include "core/filesystem.h"
 #include "core/maths.h"
 #include "physics/phy.h"
 #include "physics/physicsmesh.h"
+
+#include <cstdio>
 
 using namespace Display;
 using namespace Render;
@@ -105,10 +106,51 @@ namespace Game {
                 Physics::get_collider_meshes().complex[cubecmesh.index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(10.0f, 1.0f, 10.0f),
+                glm::vec3(100.0f, 1.0f, 100.0f),
                 Physics::CollisionMask::Physics
                 );
             cubes.emplace_back(cube);
+        }
+
+        {
+            std::tuple<ModelId, Physics::ColliderId> cube;
+            std::get<0>(cube) = cubemesh;
+            constexpr auto translation = glm::vec3(0.0f, 1.0f, 5.0f);
+            std::get<1>(cube) = Physics::create_rigidbody(
+                cubecmesh,
+                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                translation,
+                glm::quat(),
+                glm::vec3(1.0f, 1.0f, 1.0f),
+                1.0f,
+                Physics::ShapeType::Box,
+                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
+                );
+            cubes.emplace_back(cube);
+        }
+
+        Physics::ColliderId sound_cube{};
+        {
+            std::tuple<ModelId, Physics::ColliderId> cube;
+            std::get<0>(cube) = cubemesh;
+            constexpr auto translation = glm::vec3(0.0f, 5.0f, 10.0f);
+            std::get<1>(cube) = Physics::create_rigidbody(
+                cubecmesh,
+                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                translation,
+                glm::quat(),
+                glm::vec3(1.0f, 1.0f, 1.0f),
+                1.0f,
+                Physics::ShapeType::Box,
+                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
+                );
+            sound_cube = std::get<1>(cube);
+            cubes.emplace_back(cube);
+        }
+
+        {
+            auto res = Physics::CollisionMask::Physics | Physics::CollisionMask::Audio;
+            printf("%d\n", res);
         }
 
         // Setup skybox
@@ -146,20 +188,11 @@ namespace Game {
                 );
         }
 
+        Audio::audio_manager::get_instance().set_emitter_collider(sound_cube);
+
         Physics::Ray r(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
         Physics::HitInfo hit;
         // auto dt = 1.0f / 60.0f;
-
-        SoLoud::Soloud gSoloud;
-        SoLoud::Wav gJazz;
-
-        gSoloud.init();
-
-        gJazz.load(fs::create_path_from_rel_s("assets/audio/jazz.mp3").c_str());
-        gJazz.setLooping(true);
-        gJazz.setVolume(0.1f);
-
-        auto jazz_handle = gSoloud.play(gJazz);
 
         // game loop
         while (this->window->IsOpen()) {
@@ -204,6 +237,10 @@ namespace Game {
 
             Physics::step(this->deltaTime);
 
+            Audio::audio_manager::get_instance().update_listener_position(camera->pos);
+            Audio::audio_manager::get_instance().update_emitter_position(Physics::get_colliders().states[sound_cube.index].dyn.pos);
+            Audio::audio_manager::get_instance().update();
+
             // Store all drawcalls in the render device
             for (auto& [model, collider] : cubes) {
                 RenderDevice::Draw(model, Physics::get_colliders().transforms[collider.index]);
@@ -227,9 +264,6 @@ namespace Game {
             if (kbd->pressed[Input::Key::Code::Escape])
                 this->Exit();
         }
-
-        gSoloud.stop(jazz_handle);
-        gSoloud.deinit();
     }
 
     //------------------------------------------------------------------------------

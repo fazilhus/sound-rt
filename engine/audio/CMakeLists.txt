@@ -7,6 +7,8 @@ SET(files_audio
     listener.cc
     emitter.cc
     emitter.h
+    audio_manager.cc
+    audio_manager.h
 )
 SOURCE_GROUP("audio" FILES ${files_audio})
 

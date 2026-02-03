@@ -197,15 +197,20 @@ namespace Physics {
     bool cast_ray(const Ray& ray, HitInfo& hit, const uint16_t mask) {
         std::vector<HitInfo> aabb_hits;
         for (uint32_t i = 0; i < colliders_.meshes.size(); ++i) {
-            if (const auto c_mask = colliders_.masks[i];
-                mask != CollisionMask::None && (mask & c_mask) == 0) {
-                break;
+            const auto c_mask = colliders_.masks[i];
+            const auto result = (mask & c_mask);
+            if (
+                c_mask != CollisionMask::None && result == 0) {
+                continue;
             }
             const auto c = ColliderId(i);
             const auto cm = colliders_.meshes[i];
             const auto& aabb = colliders_.aabbs[i];
-            HitInfo temp_hit;
-            if (aabb.intersect(ray, temp_hit)) {
+            if (HitInfo temp_hit;
+                aabb.intersect(ray, temp_hit)) {
+                if (ray.length != inf_f && temp_hit.t > ray.length) {
+                    continue;
+                }
                 aabb_hits.emplace_back(temp_hit);
                 aabb_hits.back().collider = c;
                 aabb_hits.back().mesh = cm;
@@ -230,8 +235,11 @@ namespace Physics {
 
             for (auto& p: cm.primitives) { for (auto& tri: p.triangles) { tri.selected = false; } }
 
-            HitInfo temp_hit;
-            if (cm.intersect(model_ray, temp_hit)) {
+            if (HitInfo temp_hit;
+                cm.intersect(model_ray, temp_hit)) {
+                if (ray.length != inf_f && temp_hit.t > ray.length) {
+                    continue;
+                }
                 if (temp_hit.t < best_hit.t) {
                     best_hit = temp_hit;
                     best_hit.collider = it.collider;

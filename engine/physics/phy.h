@@ -15,9 +15,9 @@ namespace Physics {
 
     namespace CollisionMask {
         enum : uint16_t {
-            None = 0,
             Physics = 1 << 0,
-            Audio = 1 << 1
+            Audio = 1 << 1,
+            None = 1 << 15,
         };
     }
 
