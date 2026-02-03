@@ -165,9 +165,12 @@ if (SOLOUD_BACKEND_MINIAUDIO)
          ${BACKENDS_SOURCES}
          ${BACKENDS_PATH}/miniaudio/soloud_miniaudio.cpp
     )
-    set (LINK_LIBRARIES
-         ${LINK_LIBRARIES}
+
+    set (BACKENDS_SOURCES
+         ${BACKENDS_SOURCES}
+         ${BACKENDS_PATH}/miniaudio/miniaudio.h
     )
+
 endif()
 
 # Filters

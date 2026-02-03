@@ -34,3 +34,6 @@ print_option_status (SOLOUD_BACKEND_WASAPI "WASAPI backend")
 
 option (SOLOUD_BACKEND_ALSA "Set to ON for building ALSA backend" OFF)
 print_option_status (SOLOUD_BACKEND_ALSA "ALSA backend")
+
+option (SOLOUD_BACKEND_MINIAUDIO "Set to ON for building MINIAUDIO backend" ON)
+print_option_status (SOLOUD_BACKEND_MINIAUDIO "MINIAUDIO backend")
