@@ -18,7 +18,7 @@ namespace Audio {
         unsigned int m_attenuation_type{SoLoud::AudioSource::INVERSE_DISTANCE};
         Physics::ColliderId m_self_collider;
         float m_rolloff{0.75f};
-        float m_min_dist{5.0f}, m_max_dist{50.0f};
+        float m_min_dist{1.0f}, m_max_dist{50.0f};
         float m_volume{1.0f};
     };
 } // Audio

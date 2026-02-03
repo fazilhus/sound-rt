@@ -260,13 +260,6 @@ namespace Debug {
                     1.0f,
                     (cm_id.index == Core::CVarReadInt(r_draw_cm_id) && tri.selected) ? Normal : WireFrame
                 );
-                if (Core::CVarReadInt(r_draw_cm_norm) != 0) {
-                    Debug::DrawLine(
-                        t * glm::vec4(tri.center, 1.0f),
-                        glm::vec3(t * glm::vec4(tri.center, 1.0f)) + 0.5f * glm::vec3(glm::quat(t) * glm::vec4(Math::safe_normal(tri.norm), 1.0f)),
-                        1.0f, glm::vec4(1)
-                        );
-                }
             }
         }
         Debug::DrawLine(
@@ -581,7 +574,6 @@ namespace Debug {
         r_draw_aabb = Core::CVarCreate(Core::CVarType::CVar_Int, "r_draw_aabb", "0");
         r_draw_aabb_id = Core::CVarCreate(Core::CVarType::CVar_Int, "r_draw_aabb_id", "-1");
         r_draw_cm_id = Core::CVarCreate(Core::CVarType::CVar_Int, "r_draw_cm_id", "-1");
-        r_draw_cm_norm = Core::CVarCreate(Core::CVarType::CVar_Int, "r_draw_cm_norm", "0");
     }
 
     void RenderLine(RenderCommand* command) {

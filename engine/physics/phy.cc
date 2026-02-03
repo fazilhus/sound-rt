@@ -199,8 +199,7 @@ namespace Physics {
         for (uint32_t i = 0; i < colliders_.meshes.size(); ++i) {
             const auto c_mask = colliders_.masks[i];
             const auto result = (mask & c_mask);
-            if (
-                c_mask != CollisionMask::None && result == 0) {
+            if (c_mask != CollisionMask::None && result == 0) {
                 continue;
             }
             const auto c = ColliderId(i);

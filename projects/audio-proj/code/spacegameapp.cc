@@ -288,9 +288,9 @@ namespace Game {
             }
 
             Debug::DrawGrid();
-            // Debug::DrawSelectedAABB();
+            Debug::DrawSelectedAABB();
             Debug::DrawSelectedCMesh();
-            Debug::DrawAABBs();
+            // Debug::DrawAABBs();
             // Debug::DrawCMeshes();
 
             // Execute the entire rendering pipeline
@@ -332,33 +332,37 @@ namespace Game {
 
             Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
             int drawLightSpheres = Core::CVarReadInt(r_draw_light_spheres);
-            if (ImGui::Checkbox("Draw Light Spheres", reinterpret_cast<bool*>(&drawLightSpheres)))
+            if (ImGui::Checkbox("Draw Light Spheres", reinterpret_cast<bool*>(&drawLightSpheres))) {
                 Core::CVarWriteInt(r_draw_light_spheres, drawLightSpheres);
+            }
 
             Core::CVar* r_draw_light_sphere_id = Core::CVarGet("r_draw_light_sphere_id");
             int lightSphereId = Core::CVarReadInt(r_draw_light_sphere_id);
-            if (ImGui::InputInt("LightSphereId", (int*)&lightSphereId))
+            if (ImGui::InputInt("LightSphereId", (int*)&lightSphereId)){
                 Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
+            }
 
             ImGui::SeparatorText("Collision Debug Draw");
             Core::CVar* r_draw_aabb = Core::CVarGet("r_draw_aabb");
             int draw_aabb = Core::CVarReadInt(r_draw_aabb);
-            if (ImGui::Checkbox("Draw AABBs", reinterpret_cast<bool*>(&draw_aabb)))
+            if (ImGui::Checkbox("Draw AABBs", reinterpret_cast<bool*>(&draw_aabb))) {
                 Core::CVarWriteInt(r_draw_aabb, draw_aabb);
-            Core::CVar* r_draw_cm_norm = Core::CVarGet("r_draw_cm_norm");
-            int draw_cm_norm = Core::CVarReadInt(r_draw_cm_norm);
-            if (ImGui::Checkbox("Draw Collision Mesh normals", reinterpret_cast<bool*>(&draw_cm_norm)))
-                Core::CVarWriteInt(r_draw_cm_norm, draw_cm_norm);
-
+            }
             Core::CVar* r_draw_aabb_id = Core::CVarGet("r_draw_aabb_id");
             int draw_aabb_id = Core::CVarReadInt(r_draw_aabb_id);
-            if (ImGui::InputInt("AABB id", (int*)&draw_aabb_id))
+            if (ImGui::InputInt("AABB id", (int*)&draw_aabb_id)) {
                 Core::CVarWriteInt(r_draw_aabb_id, draw_aabb_id);
+            }
             Core::CVar* r_draw_cm_id = Core::CVarGet("r_draw_cm_id");
             int draw_cm_id = Core::CVarReadInt(r_draw_cm_id);
-            if (ImGui::InputInt("Collision Mesh id", (int*)&draw_cm_id))
+            if (ImGui::InputInt("Collision Mesh id", (int*)&draw_cm_id)) {
                 Core::CVarWriteInt(r_draw_cm_id, draw_cm_id);
-
+            }
+            auto distance_between_cam_and_sel = 0.0f;
+            if (draw_cm_id >= 0) {
+               distance_between_cam_and_sel  = glm::length(camera->pos - Physics::get_colliders().states[draw_cm_id].dyn.pos);
+            }
+            ImGui::Text("Distance: %0.2f", distance_between_cam_and_sel);
             ImGui::End();
 
             Debug::DispatchDebugTextDrawing();

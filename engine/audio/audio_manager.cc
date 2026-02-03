@@ -59,13 +59,21 @@ namespace Audio {
             b_should_update = false;
         }
 
-        const auto& from = m_listener.m_position;
-        const auto& to = m_emitter.m_position - from;
-        const auto ray = Physics::Ray(from, to, false);
+        _direct_los_stage();
+    }
+
+    void audio_manager::_direct_los_stage() {
+        const auto has_los = _has_los(m_listener.m_position, m_emitter.m_position);
+        m_soloud.setVolume(m_handle, has_los ? 0.0f : m_emitter.m_volume);
+    }
+
+    bool audio_manager::_has_los(const glm::vec3& from, const glm::vec3& to) const {
+        const auto& dir = m_emitter.m_position - from;
+        const auto ray = Physics::Ray(from, dir, false);
         Physics::HitInfo info;
         auto b_res = Physics::cast_ray(ray, info, Physics::CollisionMask::Audio);
-        b_res = b_res && info.collider != m_emitter.m_self_collider;
-        m_soloud.setVolume(m_handle, b_res ? 0.0f : m_emitter.m_volume);
+        return b_res && info.collider != m_emitter.m_self_collider;
     }
+
 
 } // Audio
