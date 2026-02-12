@@ -58,6 +58,14 @@ namespace Core {
         return mean + scale * cosf(theta);
     }
 
+    glm::vec3 RandomPointOnUnitCircle() {
+        return glm::normalize(glm::vec3{
+            RandomNormal(0.0f, 1.0f),
+            0.0f,
+            RandomNormal(0.0f, 1.0f),
+        });
+    }
+
     glm::vec3 RandomPointOnUnitSphere() {
         return glm::normalize(glm::vec3{
             RandomNormal(0.0f, 1.0f),

@@ -4,11 +4,14 @@
 
 #pragma once
 
+#include <deque>
+
 #include "soloud.h"
-#include "soloud_wav.h"
 
 #include "emitter.h"
 #include "listener.h"
+#include "physics/ray.h"
+
 
 namespace Audio {
     class Listener;
@@ -38,8 +41,9 @@ namespace Audio {
 
     private:
         void _direct_los_stage();
+        void _indirect_stage();
 
-        bool _has_los(const glm::vec3& from, const glm::vec3& to) const;
+        [[nodiscard]] bool _has_los(const glm::vec3& from, const glm::vec3& to) const;
 
         SoLoud::Soloud m_soloud;
 
@@ -49,5 +53,7 @@ namespace Audio {
         Emitter m_emitter;
 
         bool b_should_update = false;
+
+        std::deque<Physics::Ray> m_queued_rays;
     };
 } // Audio

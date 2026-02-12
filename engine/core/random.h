@@ -25,6 +25,9 @@ namespace Core {
     /// random float with a normal distribution
     float RandomNormal(float mean = 0, float std_deriv = 1);
 
+    /// random point on unit circle using normal distribution
+    glm::vec3 RandomPointOnUnitCircle();
+
     /// random point on unit sphere using normal distribution
     glm::vec3 RandomPointOnUnitSphere();
 } // namespace Core

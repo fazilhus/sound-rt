@@ -183,15 +183,10 @@ namespace Game {
                 translation,
                 glm::quat(),
                 glm::vec3(0.5f),
-                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
+                Physics::CollisionMask::Physics | Physics::CollisionMask::AudioSource
                 );
             sound_cube = std::get<1>(cube);
             cubes.emplace_back(cube);
-        }
-
-        {
-            auto res = Physics::CollisionMask::Physics | Physics::CollisionMask::Audio;
-            printf("%d\n", res);
         }
 
         // Setup skybox

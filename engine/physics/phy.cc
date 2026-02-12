@@ -236,9 +236,9 @@ namespace Physics {
 
             if (HitInfo temp_hit;
                 cm.intersect(model_ray, temp_hit)) {
-                if (ray.length != inf_f && temp_hit.t > ray.length) {
-                    continue;
-                }
+                // if (ray.length != inf_f && temp_hit.t > ray.length) {
+                //     continue;
+                // }
                 if (temp_hit.t < best_hit.t) {
                     best_hit = temp_hit;
                     best_hit.collider = it.collider;

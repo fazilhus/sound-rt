@@ -18,6 +18,7 @@ namespace Physics {
             None = 1 << 0,
             Physics = 1 << 1,
             Audio = 1 << 2,
+            AudioSource = 1 << 3,
             All = (1 << 16) - 1,
         };
     }

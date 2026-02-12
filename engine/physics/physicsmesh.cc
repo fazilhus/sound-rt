@@ -126,8 +126,8 @@ namespace Physics {
             const auto& p = this->primitives[i];
             for (std::size_t j = 0; j < p.triangles.size(); ++j) {
                 const auto& t = p.triangles[j];
-                HitInfo temp_hit;
-                if (t.intersect(r, temp_hit)) {
+                if (HitInfo temp_hit;
+                    t.intersect(r, temp_hit)) {
                     if (temp_hit.t < hit.t) {
                         hit = temp_hit;
                         hit.prim_n = i;
@@ -178,14 +178,17 @@ namespace Physics {
         auto tmin{0.0f}, tmax{max_f};
 
         for (auto i = 0; i < 3; ++i) {
-            const auto t1 = (this->min_bound[i] - r.orig[i]) * r.inv_dir[i];
-            const auto t2 = (this->max_bound[i] - r.orig[i]) * r.inv_dir[i];
-            tmin = Math::max(tmin, Math::min(t1, t2, tmax));
-            tmax = Math::min(tmax, Math::max(t1, t2, tmin));
+            const auto sign = signbit(r.inv_dir[i]);
+            const auto bmin = this->corners[sign][i];
+            const auto bmax = this->corners[!sign][i];
+            const auto dmin = (bmin - r.orig[i]) * r.inv_dir[i];
+            const auto dmax = (bmax - r.orig[i]) * r.inv_dir[i];
+            tmin = Math::max(tmin, Math::min(dmin, dmax, tmax));
+            tmax = Math::min(tmax, Math::max(dmin, dmax, tmin));
         }
 
         hit.t = tmin;
-        return tmin <= tmax;
+        return tmin < tmax;
     }
 
     bool AABB::intersect(const AABB& other) const {

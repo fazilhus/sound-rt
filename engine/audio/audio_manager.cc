@@ -6,6 +6,7 @@
 #include "audio_manager.h"
 
 #include "core/maths.h"
+#include "core/random.h"
 #include "physics/phy.h"
 #include "physics/ray.h"
 
@@ -60,6 +61,7 @@ namespace Audio {
         }
 
         _direct_los_stage();
+        _indirect_stage();
     }
 
     void audio_manager::_direct_los_stage() {
@@ -67,9 +69,24 @@ namespace Audio {
         m_soloud.setVolume(m_handle, has_los ? 0.0f : m_emitter.m_volume);
     }
 
+    void audio_manager::_indirect_stage() {
+        for (auto i = 0; i < 10; ++i) {
+            this->m_queued_rays.emplace_back(m_emitter.m_position, Core::RandomPointOnUnitCircle());
+        }
+
+        while (!this->m_queued_rays.empty()) {
+            const auto r = this->m_queued_rays.front();
+            this->m_queued_rays.pop_front();
+
+            if (Physics::HitInfo info;
+                Physics::cast_ray(r, info, Physics::CollisionMask::Audio)) {
+
+            }
+        }
+    }
+
     bool audio_manager::_has_los(const glm::vec3& from, const glm::vec3& to) const {
-        const auto& dir = m_emitter.m_position - from;
-        const auto ray = Physics::Ray(from, dir, false);
+        const auto ray = Physics::Ray(from, to - from, false);
         Physics::HitInfo info;
         auto b_res = Physics::cast_ray(ray, info, Physics::CollisionMask::Audio);
         return b_res && info.collider != m_emitter.m_self_collider;
