@@ -96,6 +96,7 @@ namespace Game {
         Physics::init_debug();
 
         // load all resources
+        // TODO scale vertices transform scaling no worki
         const auto cubemesh = LoadModel(fs::create_path_from_rel_s("assets/system/cube.glb"));
         const auto cubecmesh = Physics::load_collider_mesh(fs::create_path_from_rel_s("assets/system/cube.glb"));
 
