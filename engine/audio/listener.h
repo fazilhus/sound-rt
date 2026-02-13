@@ -5,8 +5,7 @@
 
 namespace Audio {
 
-    class Listener {
-    public:
+    struct Listener {
         glm::mat4 m_transform{};
         glm::quat m_rotation{};
         glm::vec3 m_position{};

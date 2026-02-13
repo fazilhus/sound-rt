@@ -14,23 +14,23 @@
 
 
 namespace Audio {
-    class Listener;
-    class Emitter;
-    class audio_manager {
+    struct Listener;
+    struct Emitter;
+    class AudioManager {
     public:
-        static audio_manager& get_instance() {
-            static audio_manager instance;
+        static AudioManager& get() {
+            static AudioManager instance;
             return instance;
         }
 
     private:
-        audio_manager();
+        AudioManager();
 
     public:
-        ~audio_manager();
+        ~AudioManager();
 
-        audio_manager(const audio_manager&) = delete;
-        void operator=(const audio_manager&) = delete;
+        AudioManager(const AudioManager&) = delete;
+        void operator=(const AudioManager&) = delete;
 
         void set_emitter_collider(Physics::ColliderId cid);
 
@@ -47,12 +47,8 @@ namespace Audio {
 
         SoLoud::Soloud m_soloud;
 
-        SoLoud::handle m_handle;
-
         Listener m_listener;
         Emitter m_emitter;
-
-        bool b_should_update = false;
 
         std::deque<Physics::Ray> m_queued_rays;
     };

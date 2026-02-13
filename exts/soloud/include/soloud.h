@@ -86,7 +86,7 @@ freely, subject to the following restrictions:
 #define SAMPLE_GRANULARITY 512
 
 // Maximum number of concurrent voices (hard limit is 4095)
-#define VOICE_COUNT 1024
+#define VOICE_COUNT 2048
 
 // Use linear resampler
 #define RESAMPLER_LINEAR

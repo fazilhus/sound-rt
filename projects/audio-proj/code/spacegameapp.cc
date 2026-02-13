@@ -224,8 +224,8 @@ namespace Game {
                 );
         }
 
-        Audio::audio_manager::get_instance().set_emitter_collider(sound_cube);
-        Audio::audio_manager::get_instance().update_emitter_position(Physics::get_colliders().states[sound_cube.index].dyn.pos);
+        Audio::AudioManager::get().set_emitter_collider(sound_cube);
+        Audio::AudioManager::get().update_emitter_position(Physics::get_colliders().states[sound_cube.index].dyn.pos);
 
         Physics::Ray r(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
         Physics::HitInfo hit;
@@ -274,8 +274,8 @@ namespace Game {
 
             Physics::step(this->deltaTime);
 
-            Audio::audio_manager::get_instance().update_listener_pos_and_at(camera->pos, camera->ort);
-            Audio::audio_manager::get_instance().update();
+            Audio::AudioManager::get().update_listener_pos_and_at(camera->pos, camera->ort);
+            Audio::AudioManager::get().update();
 
             // Store all drawcalls in the render device
             for (auto& [model, collider]: cubes) {
