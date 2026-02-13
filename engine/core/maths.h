@@ -38,7 +38,7 @@ namespace Math {
     template <typename T>
     T max(const T a, const T b, const T c) { return max(max(a, b), c); }
 
-    inline float clamp(const float v, const float min_v, const float max_v) {
+    inline float clampf(const float v, const float min_v, const float max_v) {
         return v < min_v ? min_v : v > max_v ? max_v : v;
     }
 
