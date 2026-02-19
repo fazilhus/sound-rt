@@ -57,12 +57,18 @@ namespace Audio {
         }
     }
 
+    float attenuation_concrete(const float travelled, const int bounces) {
+        const auto geometric = 1.0f / (4.0f * Math::pi_f * travelled * travelled);
+        const auto absorption = powf(1.0f - 0.05f, static_cast<float>(bounces));
+        return geometric * absorption;
+    }
+
     void Emitter::activate_voice(const glm::vec3& pos, float travelled, const int bounces) {
         const auto idx = m_voices.m_next_available_voice++;
         m_busses[bounces].annexSound(m_voices.m_data[idx].m_handle);
         m_voices.m_data[idx].m_position = pos;
         travelled = Math::clampf(travelled, m_min_dist, m_max_dist);
-        m_voices.m_data[idx].m_volume = 1.0f / (4.0f * Math::pi_f * travelled);
+        m_voices.m_data[idx].m_volume = attenuation_concrete(travelled, bounces);
     }
 
     void Emitter::reset_voices() {

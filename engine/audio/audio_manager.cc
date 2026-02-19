@@ -94,8 +94,8 @@ namespace Audio {
                 if (_has_los(m_listener.m_position, new_ray_pos)) {
                     const auto bounce_ratio = static_cast<float>(Physics::MAX_RAY_BOUNCES - ray.bounces) / static_cast<float>(Physics::MAX_RAY_BOUNCES);
                     Debug::DrawBox(hit_info.pos, glm::quat(), 0.1f, glm::vec4(bounce_ratio, 1.0f - bounce_ratio, 0.0f, 1.0f));
-                    // const auto fake_pos = hit_info.pos + glm::normalize(m_listener.m_position - hit_info.pos) * ray.travelled;
-                    m_emitter.activate_voice(hit_info.pos, ray.travelled, ray.bounces + 1);
+                    const auto fake_pos = hit_info.pos + glm::normalize(m_listener.m_position - hit_info.pos) * (hit_info.t + ray.travelled);
+                    m_emitter.activate_voice(fake_pos, (hit_info.t + ray.travelled), ray.bounces + 1);
                 }
             }
         }
