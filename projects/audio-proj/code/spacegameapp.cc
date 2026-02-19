@@ -161,13 +161,13 @@ namespace Game {
         {
             std::tuple<ModelId, Physics::ColliderId> cube;
             std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, 0.5f, 1.0f);
+            constexpr auto translation = glm::vec3(-2.5f, 0.5f, 1.0f);
             std::get<1>(cube) = Physics::create_staticbody(
                 cubecmesh,
                 Physics::get_collider_meshes().complex[cubecmesh.index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(0.5f),
+                glm::vec3(5.0f, 2.0f, 0.1f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             cubes.emplace_back(cube);

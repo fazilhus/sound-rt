@@ -3,6 +3,9 @@
 //
 
 #pragma once
+#include <array>
+
+#include "soloud_biquadresonantfilter.h"
 #include "soloud_wav.h"
 #include "physics/physicsresource.h"
 
@@ -19,16 +22,18 @@ namespace Audio {
         std::vector<Voice> m_data{};
         std::size_t m_next_available_voice{};
 
-        void init(SoLoud::Soloud& soloud, SoLoud::Wav& source, unsigned int attenuation_type, float rolloff, float min_dist, float max_dist);
+        void init(SoLoud::Soloud& soloud, SoLoud::Bus& bus, SoLoud::Wav& source, unsigned int attenuation_type, float rolloff, float min_dist, float max_dist);
     };
 
-    constexpr auto MAX_VOICES_PER_EMITTER{1023};
+    constexpr auto MAX_VOICES_PER_EMITTER{1024};
 
     struct Emitter {
         glm::mat4 m_transform{};
         glm::vec3 m_position{};
 
         SoLoud::Wav m_source;
+        std::array<SoLoud::Bus, 5> m_busses;
+        std::array<SoLoud::BiquadResonantFilter, 4> m_filters;
         Voices m_voices;
 
         unsigned int m_attenuation_type{SoLoud::AudioSource::INVERSE_DISTANCE};
@@ -41,7 +46,7 @@ namespace Audio {
 
         void update(SoLoud::Soloud& soloud) const;
 
-        void activate_voice(const glm::vec3& pos, float travelled = 0.0f);
+        void activate_voice(const glm::vec3& pos, float travelled = 0.0f, int bounces = 0);
         void reset_voices();
     };
 } // Audio

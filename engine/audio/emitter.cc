@@ -11,10 +11,10 @@
 
 namespace Audio {
 
-    void Voices::init(SoLoud::Soloud& soloud, SoLoud::Wav& source, const unsigned int attenuation_type, const float rolloff, const float min_dist, const float max_dist) {
+    void Voices::init(SoLoud::Soloud& soloud, SoLoud::Bus& bus, SoLoud::Wav& source, const unsigned int attenuation_type, const float rolloff, const float min_dist, const float max_dist) {
         m_data.resize(MAX_VOICES_PER_EMITTER);
         for (auto& [_1, _2, m_handle] : m_data) {
-            m_handle = soloud.play3d(source, 0, 0, 0, 0, 0, 0, 0);
+            m_handle = bus.play3d(source, 0, 0, 0, 0, 0, 0, 0);
             soloud.set3dSourceAttenuation(m_handle, attenuation_type, rolloff);
             soloud.set3dSourceMinMaxDistance(m_handle, min_dist, max_dist);
         }
@@ -28,7 +28,21 @@ namespace Audio {
         m_source.set3dDopplerFactor(true);
         m_source.setInaudibleBehavior(true, false);
 
-        m_voices.init(soloud,m_source, m_attenuation_type, m_rolloff, m_min_dist, m_max_dist);
+        for (auto i = 0; i < 5; ++i) {
+            const auto h = soloud.play(m_busses[i], 1.0f);
+            soloud.setProtectVoice(h, true);
+        }
+
+        m_filters[0].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 8000, 2);
+        m_filters[1].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 2000, 2);
+        m_filters[2].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 500, 2);
+        m_filters[3].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 125, 2);
+
+        for (auto i = 1; i < 5; ++i) {
+            m_busses[i].setFilter(0, &m_filters[i-1]);
+        }
+
+        m_voices.init(soloud, m_busses[0], m_source, m_attenuation_type, m_rolloff, m_min_dist, m_max_dist);
     }
 
     void Emitter::update(SoLoud::Soloud& soloud) const {
@@ -43,11 +57,12 @@ namespace Audio {
         }
     }
 
-    void Emitter::activate_voice(const glm::vec3& pos, float travelled) {
+    void Emitter::activate_voice(const glm::vec3& pos, float travelled, const int bounces) {
         const auto idx = m_voices.m_next_available_voice++;
+        m_busses[bounces].annexSound(m_voices.m_data[idx].m_handle);
         m_voices.m_data[idx].m_position = pos;
         travelled = Math::clampf(travelled, m_min_dist, m_max_dist);
-        m_voices.m_data[idx].m_volume = 0.01f * m_min_dist / (m_min_dist + m_rolloff * (travelled - m_min_dist));
+        m_voices.m_data[idx].m_volume = 1.0f / (4.0f * Math::pi_f * travelled);
     }
 
     void Emitter::reset_voices() {

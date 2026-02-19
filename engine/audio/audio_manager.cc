@@ -16,7 +16,7 @@ namespace Audio {
 
     AudioManager::AudioManager() {
         m_soloud.init();
-        m_soloud.setMaxActiveVoiceCount(MAX_VOICES_PER_EMITTER);
+        m_soloud.setMaxActiveVoiceCount(MAX_VOICES_PER_EMITTER + 5);
 
         m_emitter.init(
             m_soloud,
@@ -69,7 +69,7 @@ namespace Audio {
     }
 
     void AudioManager::_indirect_stage() {
-        for (auto i = 0; i < 1024; ++i) {
+        for (auto i = 0; i < 256; ++i) {
             this->m_queued_rays.emplace_back(m_emitter.m_position, Core::RandomPointOnUnitSphere());
         }
 
@@ -92,8 +92,10 @@ namespace Audio {
                 }
 
                 if (_has_los(m_listener.m_position, new_ray_pos)) {
-                    // Debug::DrawBox(hit_info.pos, glm::quat(), 0.1f, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
-                    m_emitter.activate_voice(new_ray_pos, ray.travelled);
+                    const auto bounce_ratio = static_cast<float>(Physics::MAX_RAY_BOUNCES - ray.bounces) / static_cast<float>(Physics::MAX_RAY_BOUNCES);
+                    Debug::DrawBox(hit_info.pos, glm::quat(), 0.1f, glm::vec4(bounce_ratio, 1.0f - bounce_ratio, 0.0f, 1.0f));
+                    // const auto fake_pos = hit_info.pos + glm::normalize(m_listener.m_position - hit_info.pos) * ray.travelled;
+                    m_emitter.activate_voice(hit_info.pos, ray.travelled, ray.bounces + 1);
                 }
             }
         }
