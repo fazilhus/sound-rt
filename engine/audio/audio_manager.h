@@ -10,12 +10,16 @@
 
 #include "emitter.h"
 #include "listener.h"
+#include "sound_path.h"
 #include "physics/ray.h"
 
 
 namespace Audio {
     struct Listener;
     struct Emitter;
+
+    constexpr auto NUM_RAYS_PER_FRAME = 128;
+
     class AudioManager {
     public:
         static AudioManager& get() {
@@ -50,6 +54,7 @@ namespace Audio {
         Listener m_listener;
         Emitter m_emitter;
 
-        std::deque<Physics::Ray> m_queued_rays;
+        std::deque<Physics::Ray> m_ray_cq;
+        std::unordered_map<sound_path_id, sound_path_data> m_paths[4];
     };
 } // Audio

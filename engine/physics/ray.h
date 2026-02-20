@@ -4,7 +4,7 @@
 
 namespace Physics {
 
-    constexpr auto MAX_RAY_BOUNCES = 1;
+    constexpr auto MAX_RAY_BOUNCES = 4;
 
     struct Ray {
         glm::vec3 orig, dir, inv_dir;

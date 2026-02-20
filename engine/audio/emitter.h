@@ -25,7 +25,7 @@ namespace Audio {
         void init(SoLoud::Soloud& soloud, SoLoud::Bus& bus, SoLoud::Wav& source, unsigned int attenuation_type, float rolloff, float min_dist, float max_dist);
     };
 
-    constexpr auto MAX_VOICES_PER_EMITTER{1024};
+    constexpr auto MAX_VOICES_PER_EMITTER{1023-5};
 
     struct Emitter {
         glm::mat4 m_transform{};
@@ -33,7 +33,7 @@ namespace Audio {
 
         SoLoud::Wav m_source;
         std::array<SoLoud::Bus, 5> m_busses;
-        std::array<SoLoud::BiquadResonantFilter, 4> m_filters;
+        // std::array<SoLoud::BiquadResonantFilter, 4> m_filters;
         Voices m_voices;
 
         unsigned int m_attenuation_type{SoLoud::AudioSource::INVERSE_DISTANCE};

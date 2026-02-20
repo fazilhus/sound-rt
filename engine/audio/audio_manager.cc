@@ -5,11 +5,15 @@
 #include "config.h"
 #include "audio_manager.h"
 
+#include <iostream>
+#include <ranges>
+
 #include "core/maths.h"
 #include "core/random.h"
 #include "physics/phy.h"
 #include "physics/ray.h"
 #include "render/debugrender.h"
+#include "core/util.h"
 
 
 namespace Audio {
@@ -33,9 +37,7 @@ namespace Audio {
         m_soloud.deinit();
     }
 
-    void AudioManager::set_emitter_collider(const Physics::ColliderId cid) {
-        m_emitter.m_self_collider = cid;
-    }
+    void AudioManager::set_emitter_collider(const Physics::ColliderId cid) { m_emitter.m_self_collider = cid; }
 
     void AudioManager::update_listener_pos_and_at(const glm::vec3& position, const glm::quat& rot) {
         m_listener.m_position = position;
@@ -63,40 +65,69 @@ namespace Audio {
 
     void AudioManager::_direct_los_stage() {
         const auto res = _has_los(m_listener.m_position, m_emitter.m_position);
-        if (res) {
-            m_emitter.activate_voice(m_emitter.m_position);
-        }
+        if (res) { m_emitter.activate_voice(m_emitter.m_position); }
     }
 
     void AudioManager::_indirect_stage() {
-        for (auto i = 0; i < 256; ++i) {
-            this->m_queued_rays.emplace_back(m_emitter.m_position, Core::RandomPointOnUnitSphere());
+        for (auto i = 0; i < NUM_RAYS_PER_FRAME; ++i) {
+            m_ray_cq.emplace_back(m_emitter.m_position, Core::RandomPointOnUnitSphere());
         }
 
-        while (!this->m_queued_rays.empty()) {
-            const auto ray = this->m_queued_rays.front();
-            this->m_queued_rays.pop_front();
+        while (!m_ray_cq.empty()) {
+            auto ray = m_ray_cq.front();
+            m_ray_cq.pop_front();
 
-            if (Physics::HitInfo hit_info;
-                Physics::cast_ray(ray, hit_info, Physics::CollisionMask::Audio)) {
-                const auto new_ray_pos = hit_info.pos + Physics::epsilon_f * hit_info.norm;
-                if (ray.bounces < Physics::MAX_RAY_BOUNCES) {
-                    const auto new_ray = Physics::Ray(new_ray_pos,
+            sound_path_id path_id;
+            sound_path_data path_data;
+            for (auto i = 0; i < 4; ++i) {
+                if (Physics::HitInfo hit_info;
+                    Physics::cast_ray(ray, hit_info, Physics::CollisionMask::Audio)) {
+                    path_id.extend(hit_info.collider, hit_info.tri_n);
+                    path_data.extend(hit_info.pos, hit_info.t);
+                    if (!m_paths[i].contains(path_id)) { m_paths[i][path_id] = path_data; }
+
+                    ray = Physics::Ray(
+                        hit_info.pos + Physics::epsilon_f * hit_info.norm,
                         glm::reflect(ray.dir, hit_info.norm),
                         true,
-                        ray.bounces + 1,
-                        hit_info.t + ray.travelled);
-                    this->m_queued_rays.emplace_back(
-                            new_ray
+                        path_data.bounces,
+                        path_data.length
                         );
+                    continue;
                 }
 
-                if (_has_los(m_listener.m_position, new_ray_pos)) {
-                    const auto bounce_ratio = static_cast<float>(Physics::MAX_RAY_BOUNCES - ray.bounces) / static_cast<float>(Physics::MAX_RAY_BOUNCES);
-                    Debug::DrawBox(hit_info.pos, glm::quat(), 0.1f, glm::vec4(bounce_ratio, 1.0f - bounce_ratio, 0.0f, 1.0f));
-                    const auto fake_pos = hit_info.pos + glm::normalize(m_listener.m_position - hit_info.pos) * (hit_info.t + ray.travelled);
-                    m_emitter.activate_voice(fake_pos, (hit_info.t + ray.travelled), ray.bounces + 1);
+                break;
+            }
+        }
+
+        int num_voices = 0;
+        for (auto i = 0; i < 4; ++i) {
+            for (auto it = m_paths[i].begin(); it != m_paths[i].end();) {
+                const auto& pd = it->second;
+                if (_has_los(m_listener.m_position, pd.position)) {
+                    const auto bounce_ratio = static_cast<float>(Physics::MAX_RAY_BOUNCES - pd.bounces) / static_cast<float>(Physics::MAX_RAY_BOUNCES);
+                    Debug::DrawBox(
+                        pd.position,
+                        glm::quat(),
+                        0.1f,
+                        glm::vec4(
+                            bounce_ratio,
+                            1.0f - bounce_ratio,
+                            0.0f,
+                            1.0f)
+                        );
+                    num_voices++;
+                    ++it;
+                } else {
+                    it = m_paths[i].erase(it);
                 }
+            }
+        }
+
+        for (auto i = 0; i < 4; ++i) {
+            for (auto it = m_paths[i].begin(); it != m_paths[i].end(); ++it) {
+                const auto& pd = it->second;
+                m_emitter.activate_voice(pd.position, pd.length, pd.bounces);
             }
         }
     }

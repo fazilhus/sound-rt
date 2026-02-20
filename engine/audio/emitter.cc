@@ -33,14 +33,14 @@ namespace Audio {
             soloud.setProtectVoice(h, true);
         }
 
-        m_filters[0].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 8000, 2);
-        m_filters[1].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 2000, 2);
-        m_filters[2].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 500, 2);
-        m_filters[3].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 125, 2);
+        // m_filters[0].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 8000, 2);
+        // m_filters[1].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 2000, 2);
+        // m_filters[2].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 500, 2);
+        // m_filters[3].setParams(SoLoud::BiquadResonantFilter::LOWPASS, 125, 2);
 
-        for (auto i = 1; i < 5; ++i) {
-            m_busses[i].setFilter(0, &m_filters[i-1]);
-        }
+        // for (auto i = 1; i < 5; ++i) {
+        //     m_busses[i].setFilter(0, &m_filters[i-1]);
+        // }
 
         m_voices.init(soloud, m_busses[0], m_source, m_attenuation_type, m_rolloff, m_min_dist, m_max_dist);
     }
@@ -59,7 +59,7 @@ namespace Audio {
 
     float attenuation_concrete(const float travelled, const int bounces) {
         const auto geometric = 1.0f / (4.0f * Math::pi_f * travelled * travelled);
-        const auto absorption = powf(1.0f - 0.05f, static_cast<float>(bounces));
+        const auto absorption = powf(1.0f - 0.02f, static_cast<float>(bounces));
         return geometric * absorption;
     }
 

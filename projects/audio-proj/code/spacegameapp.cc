@@ -202,7 +202,7 @@ namespace Game {
                 Physics::get_collider_meshes().complex[collider_meshes[2].index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(5.0f, 3.0f, 0.1f),
+                glm::vec3(5.0f, 2.5f, 0.1f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             cubes.emplace_back(cube);

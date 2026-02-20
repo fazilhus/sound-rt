@@ -66,8 +66,8 @@ namespace Physics {
         float t = max_f;
         ColliderId collider = ColliderId::Invalid();
         ColliderMeshId mesh = ColliderMeshId::Invalid();
-        std::size_t prim_n;
-        std::size_t tri_n;
+        uint32_t prim_n;
+        uint32_t tri_n;
 
         [[nodiscard]] bool hit() const {
             return t < max_f;
