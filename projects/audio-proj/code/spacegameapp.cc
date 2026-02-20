@@ -98,7 +98,28 @@ namespace Game {
         // load all resources
         // TODO scale vertices transform scaling no worki
         const auto cubemesh = LoadModel(fs::create_path_from_rel_s("assets/system/cube.glb"));
-        const auto cubecmesh = Physics::load_collider_mesh(fs::create_path_from_rel_s("assets/system/cube.glb"));
+
+        std::vector<Physics::ColliderMeshId> collider_meshes;
+        collider_meshes.push_back(
+            Physics::load_collider_mesh(
+                fs::create_path_from_rel_s("assets/system/cube.glb"), glm::vec3(100.0f, 1.0f, 100.0f)
+                )
+            );
+        collider_meshes.push_back(
+            Physics::load_collider_mesh(
+                fs::create_path_from_rel_s("assets/system/cube.glb"), glm::vec3(7.5f, 3.0f, 0.1f)
+                )
+            );
+        collider_meshes.push_back(
+            Physics::load_collider_mesh(
+                fs::create_path_from_rel_s("assets/system/cube.glb"), glm::vec3(5.0f, 3.0f, 0.1f)
+                )
+            );
+        collider_meshes.push_back(
+            Physics::load_collider_mesh(
+                fs::create_path_from_rel_s("assets/system/cube.glb"), glm::vec3(0.5f)
+                )
+            );
 
         std::vector<std::tuple<ModelId, Physics::ColliderId>> cubes;
         {
@@ -106,8 +127,8 @@ namespace Game {
             std::get<0>(cube) = cubemesh;
             constexpr auto translation = glm::vec3(0.0f, -1.0f, 0.0f);
             std::get<1>(cube) = Physics::create_staticbody(
-                cubecmesh,
-                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                collider_meshes[0],
+                Physics::get_collider_meshes().complex[collider_meshes[0].index].center,
                 translation,
                 glm::quat(),
                 glm::vec3(100.0f, 1.0f, 100.0f),
@@ -118,13 +139,13 @@ namespace Game {
         {
             std::tuple<ModelId, Physics::ColliderId> cube;
             std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, 3.0f, 0.0f);
+            constexpr auto translation = glm::vec3(0.0f, 5.0f, 0.0f);
             std::get<1>(cube) = Physics::create_staticbody(
-                cubecmesh,
-                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                collider_meshes[0],
+                Physics::get_collider_meshes().complex[collider_meshes[0].index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(100.0f, 0.1f, 100.0f),
+                glm::vec3(100.0f, 1.0f, 100.0f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             cubes.emplace_back(cube);
@@ -134,8 +155,8 @@ namespace Game {
             std::get<0>(cube) = cubemesh;
             constexpr auto translation = glm::vec3(0.0f, 1.0f, 6.0f);
             std::get<1>(cube) = Physics::create_staticbody(
-                cubecmesh,
-                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                collider_meshes[1],
+                Physics::get_collider_meshes().complex[collider_meshes[1].index].center,
                 translation,
                 glm::quat(),
                 glm::vec3(7.5f, 3.0f, 0.1f),
@@ -148,11 +169,11 @@ namespace Game {
             std::get<0>(cube) = cubemesh;
             constexpr auto translation = glm::vec3(7.5f, 1.0f, 0.0f);
             std::get<1>(cube) = Physics::create_staticbody(
-                cubecmesh,
-                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                collider_meshes[1],
+                Physics::get_collider_meshes().complex[collider_meshes[1].index].center,
                 translation,
-                glm::quat(),
-                glm::vec3(0.1f, 3.0f, 7.5f),
+                glm::quat(glm::rotate(glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f))),
+                glm::vec3(7.5f, 3.0f, 0.1f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             cubes.emplace_back(cube);
@@ -162,11 +183,11 @@ namespace Game {
             std::get<0>(cube) = cubemesh;
             constexpr auto translation = glm::vec3(-7.5f, 1.0f, 0.0f);
             std::get<1>(cube) = Physics::create_staticbody(
-                cubecmesh,
-                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                collider_meshes[1],
+                Physics::get_collider_meshes().complex[collider_meshes[1].index].center,
                 translation,
-                glm::quat(),
-                glm::vec3(0.1f, 3.0f, 7.5f),
+                glm::quat(glm::rotate(glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f))),
+                glm::vec3(7.5f, 3.0f, 0.1f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             cubes.emplace_back(cube);
@@ -177,8 +198,8 @@ namespace Game {
             std::get<0>(cube) = cubemesh;
             constexpr auto translation = glm::vec3(-2.5f, 0.5f, 1.0f);
             std::get<1>(cube) = Physics::create_staticbody(
-                cubecmesh,
-                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                collider_meshes[2],
+                Physics::get_collider_meshes().complex[collider_meshes[2].index].center,
                 translation,
                 glm::quat(),
                 glm::vec3(5.0f, 3.0f, 0.1f),
@@ -193,8 +214,8 @@ namespace Game {
             std::get<0>(cube) = cubemesh;
             constexpr auto translation = glm::vec3(0.0f, 0.5f, 3.0f);
             std::get<1>(cube) = Physics::create_staticbody(
-                cubecmesh,
-                Physics::get_collider_meshes().complex[cubecmesh.index].center,
+                collider_meshes[3],
+                Physics::get_collider_meshes().complex[collider_meshes[3].index].center,
                 translation,
                 glm::quat(),
                 glm::vec3(0.5f),
@@ -294,7 +315,11 @@ namespace Game {
 
             // Store all drawcalls in the render device
             for (auto& [model, collider]: cubes) {
-                RenderDevice::Draw(model, Physics::get_colliders().transforms[collider.index]);
+                RenderDevice::Draw(
+                    model, Physics::get_colliders().transforms[collider.index] * glm::scale(
+                        Physics::get_colliders().states[collider.index].scale
+                        )
+                    );
             }
 
             Debug::DrawGrid();

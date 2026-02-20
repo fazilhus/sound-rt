@@ -255,7 +255,7 @@ namespace Debug {
             for (const auto& tri : p.triangles) {
                 Debug::DrawTriangle(
                     tri.v0, tri.v1, tri.v2,
-                    t * glm::scale(glm::vec3(1.0f + 0.01f)),
+                    t * glm::scale(s.scale),
                     glm::vec4(1,1,0,1),
                     1.0f,
                     (cm_id.index == Core::CVarReadInt(r_draw_cm_id) && tri.selected) ? Normal : WireFrame

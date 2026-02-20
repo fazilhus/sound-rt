@@ -70,6 +70,6 @@ namespace Physics {
 
     ColliderMeshes& get_collider_meshes();
 
-    ColliderMeshId load_collider_mesh(const std::string& filepath);
+    ColliderMeshId load_collider_mesh(const std::string& filepath, const glm::vec3& scale = glm::vec3(1.0f));
 
 } // namespace Physics

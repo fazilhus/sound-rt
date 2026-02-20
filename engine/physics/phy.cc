@@ -67,15 +67,15 @@ namespace Physics {
 
     namespace Internal {
 
-        glm::mat3 create_inertia_tensor(const ShapeType type, const float m, const glm::vec3& scale, const ColliderMesh& cm) {
+        glm::mat3 create_inertia_tensor(const ShapeType type, const float m, const ColliderMesh& cm) {
             switch (type) {
             case ShapeType::Box:
                 return glm::inverse(
                     glm::mat3(
                         {
-                            {1.0f / 12.0f * m * (cm.height * cm.height * scale.x * scale.x + cm.depth * cm.depth * scale.z * scale.z), 0, 0},
-                            {0, 1.0f / 12.0f * m * (cm.width * cm.width * scale.y * scale.y + cm.depth * cm.depth * scale.z * scale.z), 0},
-                            {0, 0, 1.0f / 12.0f * m * (cm.width * cm.width * scale.y * scale.y + cm.height * cm.height * scale.x * scale.x)}
+                            {1.0f / 12.0f * m * (cm.height * cm.height + cm.depth * cm.depth), 0, 0},
+                            {0, 1.0f / 12.0f * m * (cm.width * cm.width + cm.depth * cm.depth), 0},
+                            {0, 0, 1.0f / 12.0f * m * (cm.width * cm.width + cm.height * cm.height)}
                         }
                         )
                     );
@@ -104,7 +104,7 @@ namespace Physics {
         const glm::vec3& scale, float mass, ShapeType type, const uint16_t mask
         ) {
         ColliderId id;
-        const auto mat = glm::translate(translation) * glm::mat4(rotation) * glm::scale(scale);
+        const auto mat = glm::translate(translation) * glm::mat4(rotation);
         if (collider_id_pool.Allocate(id)) {
             colliders_.meshes.emplace_back(cm_id);
             colliders_.transforms.emplace_back(mat);
@@ -113,7 +113,7 @@ namespace Physics {
             State s;
             s.set_inv_mass(1.0f / mass).set_orig(orig).set_scale(scale);
             s.set_inertia_tensor(
-                Internal::create_inertia_tensor(type, mass, scale, get_collider_meshes().complex[cm_id.index])
+                Internal::create_inertia_tensor(type, mass, get_collider_meshes().complex[cm_id.index])
                 );
             s.dyn.set_pos(translation);
             s.dyn.set_rot(rotation);
@@ -127,7 +127,7 @@ namespace Physics {
             auto& s = colliders_.states[id.index];
             s.set_inv_mass(1.0f / mass).set_orig(orig).set_scale(scale);
             s.set_inertia_tensor(
-                Internal::create_inertia_tensor(type, mass, scale, get_collider_meshes().complex[cm_id.index])
+                Internal::create_inertia_tensor(type, mass, get_collider_meshes().complex[cm_id.index])
                 );
             s.dyn.set_pos(translation);
             s.dyn.set_rot(rotation);
@@ -147,7 +147,7 @@ namespace Physics {
         const glm::vec3& scale, const uint16_t mask
         ) {
         ColliderId id;
-        const auto mat = glm::translate(translation) * glm::mat4(rotation) * glm::scale(scale);
+        const auto mat = glm::translate(translation) * glm::mat4(rotation);
         if (collider_id_pool.Allocate(id)) {
             colliders_.meshes.emplace_back(cm_id);
             colliders_.transforms.emplace_back(mat);
@@ -303,7 +303,7 @@ namespace Physics {
             state.dyn.impulse_accum = glm::vec3(0);
             state.dyn.torque_accum = glm::vec3(0);
 
-            colliders_.transforms[i] = glm::translate(state.dyn.pos) * glm::mat4_cast(state.dyn.rot) * glm::scale(glm::vec3(state.scale));
+            colliders_.transforms[i] = glm::translate(state.dyn.pos) * glm::mat4_cast(state.dyn.rot);
         }
 
         update_aabbs();

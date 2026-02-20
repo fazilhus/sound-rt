@@ -18,9 +18,16 @@ namespace Physics {
 
     namespace Internal {
 
+        glm::vec3 vert_scale(const glm::vec3& vert, const glm::mat4& scale_mat) {
+            return {glm::vec4(vert, 1.0f) * scale_mat};
+        }
+        glm::vec3 vert_scale(const float v0, const float v1, const float v2, const glm::mat4& scale_mat) {
+            return {glm::vec4(v0, v1, v2, 1.0f) * scale_mat};
+        }
+
         template <typename CompType>
         void LoadColliderMeshPrimitive(
-            const fx::gltf::Document& doc, AABB* aabb, ColliderMesh* mesh, std::size_t prim_n
+            const fx::gltf::Document& doc, AABB* aabb, ColliderMesh* mesh, std::size_t prim_n, const glm::vec3& scale
             ) {
             const auto& prim = doc.meshes[0].primitives[prim_n];
 
@@ -37,22 +44,26 @@ namespace Physics {
             const auto vbuf = reinterpret_cast<const float*>(&vb.data[vb_access.byteOffset + vb_view.byteOffset]);
 
             const auto dim = (vb_access.type == fx::gltf::Accessor::Type::Vec3) ? 3 : 4;
+            const auto scale_mat = glm::scale(scale);
             for (uint32_t i = 0; i < num_indices; i += 3) {
                 ColliderMesh::Triangle t;
-                t.v0 = glm::vec3(
+                t.v0 = vert_scale(
                     vbuf[dim * ibuf[i]],
                     vbuf[dim * ibuf[i] + 1],
-                    vbuf[dim * ibuf[i] + 2]
+                    vbuf[dim * ibuf[i] + 2],
+                    scale_mat
                     );
-                t.v1 = glm::vec3(
+                t.v1 = vert_scale(
                     vbuf[dim * ibuf[i + 1]],
                     vbuf[dim * ibuf[i + 1] + 1],
-                    vbuf[dim * ibuf[i + 1] + 2]
+                    vbuf[dim * ibuf[i + 1] + 2],
+                    scale_mat
                     );
-                t.v2 = glm::vec3(
+                t.v2 = vert_scale(
                     vbuf[dim * ibuf[i + 2]],
                     vbuf[dim * ibuf[i + 2] + 1],
-                    vbuf[dim * ibuf[i + 2] + 2]
+                    vbuf[dim * ibuf[i + 2] + 2],
+                    scale_mat
                     );
 
                 t.center = (t.v0 + t.v1 + t.v2) / 3.0f;
@@ -71,21 +82,24 @@ namespace Physics {
             }
 
             for (auto it = unique_vertices.begin(); it != unique_vertices.end(); it = std::next(it, 3)) {
-                const auto vertex = glm::vec3(
-                        vbuf[*it],
-                        vbuf[*it + 1],
-                        vbuf[*it + 2]
-                        );
+                const auto vertex = vert_scale(
+                    vbuf[*it],
+                    vbuf[*it + 1],
+                    vbuf[*it + 2],
+                    scale_mat);
                 mesh->vertices.emplace_back(vertex);
                 mesh->center += vertex;
             }
 
-            aabb->grow(glm::vec3(vb_access.min[0], vb_access.min[1], vb_access.min[2]));
-            aabb->grow(glm::vec3(vb_access.max[0], vb_access.max[1], vb_access.max[2]));
+            const auto scaled_min = vert_scale(vb_access.min[0], vb_access.min[1], vb_access.min[2], scale_mat);
+            const auto scaled_max = vert_scale(vb_access.max[0], vb_access.max[1], vb_access.max[2], scale_mat);
+
+            aabb->grow(scaled_min);
+            aabb->grow(scaled_max);
 
             mesh->radius = Math::max(
-                Math::max(vb_access.max[0], vb_access.max[1], vb_access.max[2]),
-                Math::max(vb_access.min[0], vb_access.min[1], vb_access.min[2])
+                Math::max(scaled_min.x, scaled_min.y, scaled_min.z),
+                Math::max(scaled_max.x, scaled_max.y, scaled_max.z)
                 );
             mesh->width = aabb->max_bound.x - aabb->min_bound.x;
             mesh->height = aabb->max_bound.y - aabb->min_bound.y;
@@ -203,7 +217,7 @@ namespace Physics {
         return ret;
     }
 
-    ColliderMeshId load_collider_mesh(const std::string& filepath) {
+    ColliderMeshId load_collider_mesh(const std::string& filepath, const glm::vec3& scale) {
         ColliderMeshId mesh_id;
         AABB* aabb;
         ColliderMesh* mesh;
@@ -244,19 +258,19 @@ namespace Physics {
             const auto& prim = doc.meshes[0].primitives[i];
             switch (doc.accessors[prim.indices].componentType) {
             case fx::gltf::Accessor::ComponentType::Byte:
-                Internal::LoadColliderMeshPrimitive<int8_t>(doc, aabb, mesh, i);
+                Internal::LoadColliderMeshPrimitive<int8_t>(doc, aabb, mesh, i, scale);
                 break;
             case fx::gltf::Accessor::ComponentType::UnsignedByte:
-                Internal::LoadColliderMeshPrimitive<uint8_t>(doc, aabb, mesh, i);
+                Internal::LoadColliderMeshPrimitive<uint8_t>(doc, aabb, mesh, i, scale);
                 break;
             case fx::gltf::Accessor::ComponentType::Short:
-                Internal::LoadColliderMeshPrimitive<int16_t>(doc, aabb, mesh, i);
+                Internal::LoadColliderMeshPrimitive<int16_t>(doc, aabb, mesh, i, scale);
                 break;
             case fx::gltf::Accessor::ComponentType::UnsignedShort:
-                Internal::LoadColliderMeshPrimitive<uint16_t>(doc, aabb, mesh, i);
+                Internal::LoadColliderMeshPrimitive<uint16_t>(doc, aabb, mesh, i, scale);
                 break;
             case fx::gltf::Accessor::ComponentType::UnsignedInt:
-                Internal::LoadColliderMeshPrimitive<uint32_t>(doc, aabb, mesh, i);
+                Internal::LoadColliderMeshPrimitive<uint32_t>(doc, aabb, mesh, i, scale);
                 break;
             default:
                 assert(false); // not supported
