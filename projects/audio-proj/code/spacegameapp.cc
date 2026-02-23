@@ -98,132 +98,12 @@ namespace Game {
         // load all resources
         // TODO scale vertices transform scaling no worki
         const auto cubemesh = LoadModel(fs::create_path_from_rel_s("assets/system/cube.glb"));
+        const auto cathedral = LoadModel(fs::create_path_from_rel_s("assets/audio/cathedral.glb"));
 
-        std::vector<Physics::ColliderMeshId> collider_meshes;
-        collider_meshes.push_back(
-            Physics::load_collider_mesh(
-                fs::create_path_from_rel_s("assets/system/cube.glb"), glm::vec3(100.0f, 1.0f, 100.0f)
-                )
-            );
-        collider_meshes.push_back(
-            Physics::load_collider_mesh(
-                fs::create_path_from_rel_s("assets/system/cube.glb"), glm::vec3(7.5f, 3.0f, 0.1f)
-                )
-            );
-        collider_meshes.push_back(
-            Physics::load_collider_mesh(
-                fs::create_path_from_rel_s("assets/system/cube.glb"), glm::vec3(5.0f, 3.0f, 0.1f)
-                )
-            );
-        collider_meshes.push_back(
-            Physics::load_collider_mesh(
-                fs::create_path_from_rel_s("assets/system/cube.glb"), glm::vec3(0.5f)
-                )
-            );
+        const auto emitter_position = glm::vec3(6.0f, -12.0f, 0.0f);
+        const auto emitter_transform = glm::translate(emitter_position) * glm::scale(glm::vec3(0.5f));
 
-        std::vector<std::tuple<ModelId, Physics::ColliderId>> cubes;
-        {
-            std::tuple<ModelId, Physics::ColliderId> cube;
-            std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, -1.0f, 0.0f);
-            std::get<1>(cube) = Physics::create_staticbody(
-                collider_meshes[0],
-                Physics::get_collider_meshes().complex[collider_meshes[0].index].center,
-                translation,
-                glm::quat(),
-                glm::vec3(100.0f, 1.0f, 100.0f),
-                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
-                );
-            cubes.emplace_back(cube);
-        }
-        {
-            std::tuple<ModelId, Physics::ColliderId> cube;
-            std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, 5.0f, 0.0f);
-            std::get<1>(cube) = Physics::create_staticbody(
-                collider_meshes[0],
-                Physics::get_collider_meshes().complex[collider_meshes[0].index].center,
-                translation,
-                glm::quat(),
-                glm::vec3(100.0f, 1.0f, 100.0f),
-                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
-                );
-            cubes.emplace_back(cube);
-        }
-        {
-            std::tuple<ModelId, Physics::ColliderId> cube;
-            std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, 1.0f, 6.0f);
-            std::get<1>(cube) = Physics::create_staticbody(
-                collider_meshes[1],
-                Physics::get_collider_meshes().complex[collider_meshes[1].index].center,
-                translation,
-                glm::quat(),
-                glm::vec3(7.5f, 3.0f, 0.1f),
-                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
-                );
-            cubes.emplace_back(cube);
-        }
-        {
-            std::tuple<ModelId, Physics::ColliderId> cube;
-            std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(7.5f, 1.0f, 0.0f);
-            std::get<1>(cube) = Physics::create_staticbody(
-                collider_meshes[1],
-                Physics::get_collider_meshes().complex[collider_meshes[1].index].center,
-                translation,
-                glm::quat(glm::rotate(glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f))),
-                glm::vec3(7.5f, 3.0f, 0.1f),
-                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
-                );
-            cubes.emplace_back(cube);
-        }
-        {
-            std::tuple<ModelId, Physics::ColliderId> cube;
-            std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(-7.5f, 1.0f, 0.0f);
-            std::get<1>(cube) = Physics::create_staticbody(
-                collider_meshes[1],
-                Physics::get_collider_meshes().complex[collider_meshes[1].index].center,
-                translation,
-                glm::quat(glm::rotate(glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f))),
-                glm::vec3(7.5f, 3.0f, 0.1f),
-                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
-                );
-            cubes.emplace_back(cube);
-        }
-
-        {
-            std::tuple<ModelId, Physics::ColliderId> cube;
-            std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(-2.5f, 0.5f, 1.0f);
-            std::get<1>(cube) = Physics::create_staticbody(
-                collider_meshes[2],
-                Physics::get_collider_meshes().complex[collider_meshes[2].index].center,
-                translation,
-                glm::quat(),
-                glm::vec3(5.0f, 2.5f, 0.1f),
-                Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
-                );
-            cubes.emplace_back(cube);
-        }
-
-        Physics::ColliderId sound_cube{};
-        {
-            std::tuple<ModelId, Physics::ColliderId> cube;
-            std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, 0.5f, 3.0f);
-            std::get<1>(cube) = Physics::create_staticbody(
-                collider_meshes[3],
-                Physics::get_collider_meshes().complex[collider_meshes[3].index].center,
-                translation,
-                glm::quat(),
-                glm::vec3(0.5f),
-                Physics::CollisionMask::Physics | Physics::CollisionMask::AudioSource
-                );
-            sound_cube = std::get<1>(cube);
-            cubes.emplace_back(cube);
-        }
+        Audio::AudioManager::get().load_scene(fs::create_path_from_rel_s("assets/audio/cathedral.glb"));
 
         // Setup skybox
         std::vector<std::string> skybox
@@ -260,8 +140,8 @@ namespace Game {
                 );
         }
 
-        Audio::AudioManager::get().set_emitter_collider(sound_cube);
-        Audio::AudioManager::get().update_emitter_position(Physics::get_colliders().states[sound_cube.index].dyn.pos);
+        // Audio::AudioManager::get().set_emitter_collider(sound_cube);
+        Audio::AudioManager::get().update_emitter_position(emitter_position);
 
         Physics::Ray r(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0));
         Physics::HitInfo hit;
@@ -314,17 +194,14 @@ namespace Game {
             Audio::AudioManager::get().update();
 
             // Store all drawcalls in the render device
-            for (auto& [model, collider]: cubes) {
-                RenderDevice::Draw(
-                    model, Physics::get_colliders().transforms[collider.index] * glm::scale(
-                        Physics::get_colliders().states[collider.index].scale
-                        )
-                    );
-            }
+            RenderDevice::Draw(cubemesh, emitter_transform);
+            RenderDevice::Draw(cathedral, glm::mat4(1.0f));
+
+            // Audio::AudioManager::get().debug_draw();
 
             Debug::DrawGrid();
-            Debug::DrawSelectedAABB();
-            Debug::DrawSelectedCMesh();
+            // Debug::DrawSelectedAABB();
+            // Debug::DrawSelectedCMesh();
             // Debug::DrawAABBs();
             // Debug::DrawCMeshes();
 
@@ -377,27 +254,27 @@ namespace Game {
                 Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
             }
 
-            ImGui::SeparatorText("Collision Debug Draw");
-            Core::CVar* r_draw_aabb = Core::CVarGet("r_draw_aabb");
-            int draw_aabb = Core::CVarReadInt(r_draw_aabb);
-            if (ImGui::Checkbox("Draw AABBs", reinterpret_cast<bool*>(&draw_aabb))) {
-                Core::CVarWriteInt(r_draw_aabb, draw_aabb);
-            }
-            Core::CVar* r_draw_aabb_id = Core::CVarGet("r_draw_aabb_id");
-            int draw_aabb_id = Core::CVarReadInt(r_draw_aabb_id);
-            if (ImGui::InputInt("AABB id", (int*)&draw_aabb_id)) {
-                Core::CVarWriteInt(r_draw_aabb_id, draw_aabb_id);
-            }
-            Core::CVar* r_draw_cm_id = Core::CVarGet("r_draw_cm_id");
-            int draw_cm_id = Core::CVarReadInt(r_draw_cm_id);
-            if (ImGui::InputInt("Collision Mesh id", (int*)&draw_cm_id)) {
-                Core::CVarWriteInt(r_draw_cm_id, draw_cm_id);
-            }
-            auto distance_between_cam_and_sel = 0.0f;
-            if (draw_cm_id >= 0) {
-               distance_between_cam_and_sel  = glm::length(camera->pos - Physics::get_colliders().states[draw_cm_id].dyn.pos);
-            }
-            ImGui::Text("Distance: %0.2f", distance_between_cam_and_sel);
+            // ImGui::SeparatorText("Collision Debug Draw");
+            // Core::CVar* r_draw_aabb = Core::CVarGet("r_draw_aabb");
+            // int draw_aabb = Core::CVarReadInt(r_draw_aabb);
+            // if (ImGui::Checkbox("Draw AABBs", reinterpret_cast<bool*>(&draw_aabb))) {
+            //     Core::CVarWriteInt(r_draw_aabb, draw_aabb);
+            // }
+            // Core::CVar* r_draw_aabb_id = Core::CVarGet("r_draw_aabb_id");
+            // int draw_aabb_id = Core::CVarReadInt(r_draw_aabb_id);
+            // if (ImGui::InputInt("AABB id", (int*)&draw_aabb_id)) {
+            //     Core::CVarWriteInt(r_draw_aabb_id, draw_aabb_id);
+            // }
+            // Core::CVar* r_draw_cm_id = Core::CVarGet("r_draw_cm_id");
+            // int draw_cm_id = Core::CVarReadInt(r_draw_cm_id);
+            // if (ImGui::InputInt("Collision Mesh id", (int*)&draw_cm_id)) {
+            //     Core::CVarWriteInt(r_draw_cm_id, draw_cm_id);
+            // }
+            // auto distance_between_cam_and_sel = 0.0f;
+            // if (Physics::get_colliders().states.size() > 0 && draw_cm_id >= 0) {
+            //    distance_between_cam_and_sel  = glm::length(camera->pos - Physics::get_colliders().states[draw_cm_id].dyn.pos);
+            // }
+            // ImGui::Text("Distance: %0.2f", distance_between_cam_and_sel);
             ImGui::End();
 
             Debug::DispatchDebugTextDrawing();

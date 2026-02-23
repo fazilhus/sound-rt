@@ -5,28 +5,21 @@
 #include "config.h"
 #include "audio_manager.h"
 
-#include <ranges>
 
-#include "core/cvar.h"
 #include "core/maths.h"
 #include "core/random.h"
 #include "physics/phy.h"
 #include "physics/ray.h"
 #include "render/debugrender.h"
-#include "core/util.h"
 
 
 namespace Audio {
 
-    static Core::CVar* a_sound_speed = nullptr;
 
     AudioManager::AudioManager() {
         m_soloud.init();
         m_soloud.setMaxActiveVoiceCount(MAX_VOICES_PER_EMITTER + 5);
 
-        a_sound_speed =  Core::CVarCreate(Core::CVarType::CVar_Float, "a_sound_speed", "343.0");
-
-        m_soloud.set3dSoundSpeed(Core::CVarReadFloat(a_sound_speed));
         m_emitter.init(
             m_soloud,
             fs::create_path_from_rel_s("assets/audio/jazz.mp3")
@@ -40,6 +33,10 @@ namespace Audio {
     AudioManager::~AudioManager() {
         m_soloud.stopAll();
         m_soloud.deinit();
+    }
+
+    void AudioManager::load_scene(const std::string& filepath) {
+        m_scene.load_from(filepath);
     }
 
     void AudioManager::set_emitter_collider(const Physics::ColliderId cid) { m_emitter.m_self_collider = cid; }
@@ -67,6 +64,10 @@ namespace Audio {
 
         m_emitter.update(m_soloud);
         m_soloud.update3dAudio();
+    }
+
+    void AudioManager::debug_draw() const {
+        m_scene.draw_bvh();
     }
 
     void AudioManager::_direct_los_stage() {

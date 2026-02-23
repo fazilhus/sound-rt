@@ -11,6 +11,8 @@ SET(files_audio
     audio_manager.h
     sound_path.cc
     sound_path.h
+    scene.cc
+    scene.h
 )
 SOURCE_GROUP("audio" FILES ${files_audio})
 

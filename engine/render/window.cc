@@ -242,7 +242,7 @@ namespace Display {
             glEnable(GL_MULTISAMPLE);
 
             // disable vsync
-            glfwSwapInterval(1);
+            glfwSwapInterval(0);
 
             // setup viewport
             glViewport(0, 0, this->width, this->height);

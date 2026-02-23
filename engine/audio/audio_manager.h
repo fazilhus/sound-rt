@@ -10,6 +10,7 @@
 
 #include "emitter.h"
 #include "listener.h"
+#include "scene.h"
 #include "sound_path.h"
 #include "physics/ray.h"
 
@@ -36,6 +37,8 @@ namespace Audio {
         AudioManager(const AudioManager&) = delete;
         void operator=(const AudioManager&) = delete;
 
+        void load_scene(const std::string& filepath);
+
         void set_emitter_collider(Physics::ColliderId cid);
 
         void update_sound_speed(float sound_speed);
@@ -43,6 +46,8 @@ namespace Audio {
         void update_emitter_position(const glm::vec3& position);
 
         void update();
+
+        void debug_draw() const;
 
     private:
         void _direct_los_stage();
@@ -57,5 +62,6 @@ namespace Audio {
 
         std::deque<Physics::Ray> m_ray_cq;
         std::unordered_map<sound_path_id, sound_path_data> m_paths[4];
+        scene m_scene;
     };
 } // Audio
