@@ -197,7 +197,7 @@ namespace Game {
             RenderDevice::Draw(cubemesh, emitter_transform);
             RenderDevice::Draw(cathedral, glm::mat4(1.0f));
 
-            // Audio::AudioManager::get().debug_draw();
+            Audio::AudioManager::get().debug_draw();
 
             Debug::DrawGrid();
             // Debug::DrawSelectedAABB();

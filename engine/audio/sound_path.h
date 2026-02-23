@@ -13,9 +13,9 @@ namespace Physics {
 namespace Audio {
 
     struct sound_path_id {
-        void extend(Physics::ColliderId cid, uint32_t tri_n);
+        void extend(uint32_t tri_n);
 
-        std::vector<uint64_t> id;
+        std::vector<uint32_t> id;
     };
 
     struct sound_path_data {
@@ -32,9 +32,9 @@ namespace std {
     template<>
     struct hash<Audio::sound_path_id> {
         size_t operator()(const Audio::sound_path_id& path) const {
-            auto ret = std::hash<uint64_t>()(path.id[0]);
+            auto ret = std::hash<uint32_t>()(path.id[0]);
             for (auto i = 1; i < path.id.size(); ++i) {
-                ret ^= std::hash<uint64_t>()(path.id[i]);
+                ret ^= std::hash<uint32_t>()(path.id[i]);
             }
             return ret;
         }

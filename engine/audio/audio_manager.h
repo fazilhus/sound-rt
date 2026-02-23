@@ -37,7 +37,7 @@ namespace Audio {
         AudioManager(const AudioManager&) = delete;
         void operator=(const AudioManager&) = delete;
 
-        void load_scene(const std::string& filepath);
+        void load_scene(const std::string& filepath, bvh::SplitAlgo algo = bvh::Longest);
 
         void set_emitter_collider(Physics::ColliderId cid);
 
@@ -60,7 +60,7 @@ namespace Audio {
         Listener m_listener;
         Emitter m_emitter;
 
-        std::deque<Physics::Ray> m_ray_cq;
+        std::deque<ray> m_ray_cq;
         std::unordered_map<sound_path_id, sound_path_data> m_paths[4];
         scene m_scene;
     };

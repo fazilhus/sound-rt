@@ -10,8 +10,8 @@
 
 namespace Audio {
 
-    void sound_path_id::extend(const Physics::ColliderId cid, const uint32_t tri_n) {
-        id.push_back((static_cast<uint64_t>(static_cast<uint32_t>(cid)) << 32) + tri_n);
+    void sound_path_id::extend(const uint32_t tri_n) {
+        id.push_back(tri_n);
     }
 
     void sound_path_data::extend(const glm::vec3& pos, const float t) {

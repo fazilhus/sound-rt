@@ -35,8 +35,8 @@ namespace Audio {
         m_soloud.deinit();
     }
 
-    void AudioManager::load_scene(const std::string& filepath) {
-        m_scene.load_from(filepath);
+    void AudioManager::load_scene(const std::string& filepath, const bvh::SplitAlgo algo) {
+        m_scene.load_from(filepath, algo);
     }
 
     void AudioManager::set_emitter_collider(const Physics::ColliderId cid) { m_emitter.m_self_collider = cid; }
@@ -81,25 +81,20 @@ namespace Audio {
         }
 
         while (!m_ray_cq.empty()) {
-            auto ray = m_ray_cq.front();
+            auto r = m_ray_cq.front();
             m_ray_cq.pop_front();
 
             sound_path_id path_id;
             sound_path_data path_data;
             for (auto i = 0; i < 4; ++i) {
-                if (Physics::HitInfo hit_info;
-                    Physics::cast_ray(ray, hit_info, Physics::CollisionMask::Audio)) {
-                    path_id.extend(hit_info.collider, hit_info.tri_n);
+                Physics::HitInfo hit_info;
+                m_scene.bvh_tree.intersect(m_scene.triangles, m_scene.indices, r, hit_info);
+                if (hit_info.hit()) {
+                    path_id.extend(hit_info.tri_n);
                     path_data.extend(hit_info.pos, hit_info.t);
                     if (!m_paths[i].contains(path_id)) { m_paths[i][path_id] = path_data; }
 
-                    ray = Physics::Ray(
-                        hit_info.pos + Physics::epsilon_f * hit_info.norm,
-                        glm::reflect(ray.dir, hit_info.norm),
-                        true,
-                        path_data.bounces,
-                        path_data.length
-                        );
+                    r = ray(hit_info.pos + Physics::epsilon_f * hit_info.norm, glm::reflect(r.dir, hit_info.norm));
                     continue;
                 }
 
