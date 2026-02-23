@@ -5,9 +5,9 @@
 #include "config.h"
 #include "audio_manager.h"
 
-#include <iostream>
 #include <ranges>
 
+#include "core/cvar.h"
 #include "core/maths.h"
 #include "core/random.h"
 #include "physics/phy.h"
@@ -18,10 +18,15 @@
 
 namespace Audio {
 
+    static Core::CVar* a_sound_speed = nullptr;
+
     AudioManager::AudioManager() {
         m_soloud.init();
         m_soloud.setMaxActiveVoiceCount(MAX_VOICES_PER_EMITTER + 5);
 
+        a_sound_speed =  Core::CVarCreate(Core::CVarType::CVar_Float, "a_sound_speed", "343.0");
+
+        m_soloud.set3dSoundSpeed(Core::CVarReadFloat(a_sound_speed));
         m_emitter.init(
             m_soloud,
             fs::create_path_from_rel_s("assets/audio/jazz.mp3")
@@ -38,6 +43,7 @@ namespace Audio {
     }
 
     void AudioManager::set_emitter_collider(const Physics::ColliderId cid) { m_emitter.m_self_collider = cid; }
+    void AudioManager::update_sound_speed(const float sound_speed) { m_soloud.set3dSoundSpeed(sound_speed); }
 
     void AudioManager::update_listener_pos_and_at(const glm::vec3& position, const glm::quat& rot) {
         m_listener.m_position = position;
@@ -54,13 +60,13 @@ namespace Audio {
     }
 
     void AudioManager::update() {
-        m_soloud.update3dAudio();
         m_emitter.reset_voices();
 
-        // _direct_los_stage();
+        _direct_los_stage();
         _indirect_stage();
 
         m_emitter.update(m_soloud);
+        m_soloud.update3dAudio();
     }
 
     void AudioManager::_direct_los_stage() {
@@ -100,11 +106,11 @@ namespace Audio {
             }
         }
 
-        int num_voices = 0;
-        for (auto i = 0; i < 4; ++i) {
-            for (auto it = m_paths[i].begin(); it != m_paths[i].end();) {
-                const auto& pd = it->second;
-                if (_has_los(m_listener.m_position, pd.position)) {
+        auto num_voices = 0;
+        for (auto & m_path : m_paths) {
+            for (auto it = m_path.begin(); it != m_path.end();) {
+                if (const auto& pd = it->second;
+                    _has_los(m_listener.m_position, pd.position)) {
                     const auto bounce_ratio = static_cast<float>(Physics::MAX_RAY_BOUNCES - pd.bounces) / static_cast<float>(Physics::MAX_RAY_BOUNCES);
                     Debug::DrawBox(
                         pd.position,
@@ -119,15 +125,15 @@ namespace Audio {
                     num_voices++;
                     ++it;
                 } else {
-                    it = m_paths[i].erase(it);
+                    it = m_path.erase(it);
                 }
             }
         }
 
-        for (auto i = 0; i < 4; ++i) {
-            for (auto it = m_paths[i].begin(); it != m_paths[i].end(); ++it) {
-                const auto& pd = it->second;
-                m_emitter.activate_voice(pd.position, pd.length, pd.bounces);
+        for (auto & m_path : m_paths) {
+            for (auto it = m_path.begin(); it != m_path.end(); ++it) {
+                const auto& [position, length, bounces] = it->second;
+                m_emitter.activate_voice(position, length, bounces);
             }
         }
     }

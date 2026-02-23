@@ -58,7 +58,7 @@ namespace Audio {
     }
 
     float attenuation_concrete(const float travelled, const int bounces) {
-        const auto geometric = 1.0f / (4.0f * Math::pi_f * travelled * travelled);
+        const auto geometric = 1.0f / (4.0f * Math::pi_f * travelled);
         const auto absorption = powf(1.0f - 0.02f, static_cast<float>(bounces));
         return geometric * absorption;
     }
