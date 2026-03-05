@@ -59,7 +59,7 @@ namespace Audio {
     void AudioManager::update() {
         m_emitter.reset_voices();
 
-        _direct_los_stage();
+        // _direct_los_stage();
         _indirect_stage();
 
         m_emitter.update(m_soloud);
@@ -87,6 +87,9 @@ namespace Audio {
             sound_path_id path_id;
             sound_path_data path_data;
             for (auto i = 0; i < 4; ++i) {
+                if (m_paths[i].size() >= 128) {
+                    continue;
+                }
                 Physics::HitInfo hit_info;
                 m_scene.bvh_tree.intersect(m_scene.triangles, m_scene.indices, r, hit_info);
                 if (hit_info.hit()) {
@@ -94,7 +97,10 @@ namespace Audio {
                     path_data.extend(hit_info.pos, hit_info.t);
                     if (!m_paths[i].contains(path_id)) { m_paths[i][path_id] = path_data; }
 
-                    r = ray(hit_info.pos + Physics::epsilon_f * hit_info.norm, glm::reflect(r.dir, hit_info.norm));
+                    // r = ray(hit_info.pos + Physics::epsilon_f * hit_info.norm, glm::reflect(r.dir, hit_info.norm));
+                    r.orig = hit_info.pos + Physics::epsilon_f * hit_info.norm;
+                    r.dir = glm::reflect(r.dir, hit_info.norm);
+                    r.inv_dir = 1.0f / r.dir;
                     continue;
                 }
 
@@ -107,7 +113,7 @@ namespace Audio {
             for (auto it = m_path.begin(); it != m_path.end();) {
                 if (const auto& pd = it->second;
                     _has_los(m_listener.m_position, pd.position)) {
-                    const auto bounce_ratio = static_cast<float>(Physics::MAX_RAY_BOUNCES - pd.bounces) / static_cast<float>(Physics::MAX_RAY_BOUNCES);
+                    const auto bounce_ratio = static_cast<float>(Audio::MAX_RAY_BOUNCES - pd.bounces) / static_cast<float>(Audio::MAX_RAY_BOUNCES);
                     Debug::DrawBox(
                         pd.position,
                         glm::quat(),
@@ -134,11 +140,16 @@ namespace Audio {
         }
     }
 
-    bool AudioManager::_has_los(const glm::vec3& from, const glm::vec3& to) const {
-        const auto ray = Physics::Ray(from, to - from, false);
+    bool AudioManager::_has_los(const glm::vec3& from, const glm::vec3& to) {
+        const auto len = to - from;
+        auto r = ray(from, len);
         Physics::HitInfo info;
-        auto b_res = Physics::cast_ray(ray, info, Physics::CollisionMask::Audio);
-        return !b_res || info.collider == m_emitter.m_self_collider;
+        m_scene.bvh_tree.intersect(m_scene.triangles, m_scene.indices, r, info);
+        return !info.hit() || info.t >= glm::length(len);
+        // const auto ray = Physics::Ray(from, to - from, false);
+        // Physics::HitInfo info;
+        // auto b_res = Physics::cast_ray(ray, info, Physics::CollisionMask::Audio);
+        // return !b_res || info.collider == m_emitter.m_self_collider;
     }
 
 

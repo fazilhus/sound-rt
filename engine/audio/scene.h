@@ -3,6 +3,9 @@
 //
 
 #pragma once
+
+#include <string>
+
 #include "physics/physicsresource.h"
 
 
@@ -14,11 +17,13 @@ namespace Physics {
 
 namespace Audio {
 
+    constexpr auto MAX_RAY_BOUNCES = 4;
+
     struct ray {
         glm::vec3 orig, dir, inv_dir;
         float t;
 
-        ray(const glm::vec3& o, const glm::vec3& d) : orig(o), dir(d), inv_dir(1.f / dir), t(Physics::max_f) {}
+        ray(const glm::vec3& o, const glm::vec3& d) : orig(o), dir(glm::normalize(d)), inv_dir(1.f / dir), t(Physics::max_f) {}
     };
 
     struct triangle {
@@ -33,7 +38,7 @@ namespace Audio {
         glm::vec3 center;
         glm::vec3 normal;
 
-        bool intersect(const ray& r, Physics::HitInfo& hit) const;
+        bool intersect(ray& r, Physics::HitInfo& hit) const;
     };
 
     constexpr auto BVH_DEPTH = 16;
@@ -67,11 +72,11 @@ namespace Audio {
 
             void update_node_bounds(const std::vector<triangle>& triangles, const std::vector<uint>& indices);
             float eval_sah(const std::vector<triangle>& triangles, const std::vector<uint>& indices, int axis, float pos) const;
-            float intersect_aabb(const ray& r) const;
+            float intersect_aabb(ray& r) const;
         };
 
         void build(const std::vector<triangle>& triangles, std::vector<uint>& indices);
-        void intersect(const std::vector<triangle>& triangles, std::vector<uint>& indices, const ray& ray, Physics::HitInfo& hit);
+        void intersect(const std::vector<triangle>& triangles, const std::vector<uint>& indices, ray& ray, Physics::HitInfo& hit);
 
     private:
         void subdivide(uint node_idx, const std::vector<triangle>& triangles, std::vector<uint>& indices, int depth = 0);

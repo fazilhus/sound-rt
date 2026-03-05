@@ -53,7 +53,7 @@ namespace Audio {
         void _direct_los_stage();
         void _indirect_stage();
 
-        [[nodiscard]] bool _has_los(const glm::vec3& from, const glm::vec3& to) const;
+        [[nodiscard]] bool _has_los(const glm::vec3& from, const glm::vec3& to);
 
         SoLoud::Soloud m_soloud;
 

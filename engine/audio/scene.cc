@@ -66,7 +66,7 @@ namespace Audio {
     }
 
 
-    bool triangle::intersect(const ray& r, Physics::HitInfo& hit) const {
+    bool triangle::intersect(ray& r, Physics::HitInfo& hit) const {
         const auto edge1 = this->v1 - this->v0;
         const auto edge2 = this->v2 - this->v0;
         const auto ray_cross_e2 = glm::cross(r.dir, edge2);
@@ -85,6 +85,7 @@ namespace Audio {
 
         const auto t = inv_det * glm::dot(edge2, ray_to_v0_cross_e1);
         if (t > Physics::epsilon_f && t < hit.t) {
+            r.t = t;
             hit.t = t;
             hit.pos = r.orig + r.dir * hit.t;
             hit.norm = this->normal;
@@ -141,9 +142,17 @@ namespace Audio {
         return cost > 0 ? cost : Physics::max_f;
     }
 
-    float bvh::node::intersect_aabb(const ray& r) const {
+    float bvh::node::intersect_aabb(ray& r) const {
 #if USE_SSE
 #else
+        // float tx1 = (this->bounds.min_bound.x - r.orig.x) * r.inv_dir.x, tx2 = (this->bounds.max_bound.x - r.orig.x) * r.inv_dir.x;
+        // float tmin = Math::min( tx1, tx2 ), tmax = Math::max( tx1, tx2 );
+        // float ty1 = (this->bounds.min_bound.y - r.orig.y) * r.inv_dir.y, ty2 = (this->bounds.max_bound.y - r.orig.y) * r.inv_dir.y;
+        // tmin = Math::max( tmin, Math::min( ty1, ty2 ) ), tmax = Math::min( tmax, Math::max( ty1, ty2 ) );
+        // float tz1 = (this->bounds.min_bound.z - r.orig.z) * r.inv_dir.z, tz2 = (this->bounds.max_bound.z - r.orig.z) * r.inv_dir.z;
+        // tmin = Math::max( tmin, Math::min( tz1, tz2 ) ), tmax = Math::min( tmax, Math::max( tz1, tz2 ) );
+        // if (tmax >= tmin && tmin < r.t && tmax > 0) return tmin;
+        // return Physics::max_f;
         auto tmin{0.0f}, tmax{Physics::max_f};
 
         for (auto i = 0; i < 3; ++i) {
@@ -155,7 +164,8 @@ namespace Audio {
             tmin = Math::max(tmin, Math::min(dmin, dmax, tmax));
             tmax = Math::min(tmax, Math::max(dmin, dmax, tmin));
         }
-        return tmax >= tmin && tmin < r.t && tmax > 0.0f ? tmin : Physics::max_f;
+        if (tmax >= tmin && tmin < r.t && tmax > 0) return tmin;
+        return Physics::max_f;
 #endif
     }
 
@@ -169,7 +179,7 @@ namespace Audio {
     }
 
     void bvh::intersect(
-        const std::vector<triangle>& triangles, std::vector<uint>& indices, const ray& ray,
+        const std::vector<triangle>& triangles, const std::vector<uint>& indices, ray& ray,
         Physics::HitInfo& hit
         ) {
         uint current_idx{0};
@@ -180,8 +190,11 @@ namespace Audio {
         for (;;) {
             if (current.is_leaf()) {
                 for (auto i = 0; i < current.tri_num; ++i) {
-                    const auto& tri = triangles[indices[current.left_or_first + i]];
-                    tri.intersect(ray, hit);
+                    const auto tri_idx = indices[current.left_or_first + i];
+                    if (const auto& tri = triangles[tri_idx];
+                        tri.intersect(ray, hit)) {
+                        hit.tri_n = tri_idx;
+                    }
                 }
                 if (stack_ptr == 0) {
                     break;

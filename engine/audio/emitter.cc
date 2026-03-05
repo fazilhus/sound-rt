@@ -64,6 +64,7 @@ namespace Audio {
     }
 
     void Emitter::activate_voice(const glm::vec3& pos, float travelled, const int bounces) {
+        if (m_voices.m_next_available_voice + 1 >= MAX_VOICES_PER_EMITTER) {return;}
         const auto idx = m_voices.m_next_available_voice++;
         m_busses[bounces].annexSound(m_voices.m_data[idx].m_handle);
         m_voices.m_data[idx].m_position = pos;
