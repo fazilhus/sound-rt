@@ -15,6 +15,7 @@
 #include "core/maths.h"
 #include "render/debugrender.h"
 
+// #define USE_SSE;
 
 namespace Audio {
     namespace Internal {
@@ -94,17 +95,17 @@ namespace Audio {
         return false;
     }
 
-    bvh::node::aabb::aabb() {
+    aabb::aabb() {
         this->min_bound = glm::vec3(Physics::max_f);
         this->max_bound = glm::vec3(-Physics::max_f);
     }
 
-    void bvh::node::aabb::grow(const glm::vec3& p) {
+    void aabb::grow(const glm::vec3& p) {
         this->min_bound = glm::min(this->min_bound, p);
         this->max_bound = glm::max(this->max_bound, p);
     }
 
-    float bvh::node::aabb::area() const {
+    float aabb::area() const {
         const auto e = max_bound - min_bound;
         return e.x * e.x + e.y * e.y + e.z * e.z;
     }
@@ -113,9 +114,12 @@ namespace Audio {
         for (auto i = 0; i < this->tri_num; ++i) {
             const auto tri_idx = indices[this->left_or_first + i];
             const auto& tri = triangles[tri_idx];
-            this->bounds.grow(tri.v0);
-            this->bounds.grow(tri.v1);
-            this->bounds.grow(tri.v2);
+            this->bmin = glm::min(this->bmin, tri.v0);
+            this->bmax = glm::max(this->bmax, tri.v0);
+            this->bmin = glm::min(this->bmin, tri.v1);
+            this->bmax = glm::max(this->bmax, tri.v1);
+            this->bmin = glm::min(this->bmin, tri.v2);
+            this->bmax = glm::max(this->bmax, tri.v2);
         }
     }
 
@@ -143,24 +147,22 @@ namespace Audio {
     }
 
     float bvh::node::intersect_aabb(ray& r) const {
-#if USE_SSE
+#ifdef USE_SSE
+        static __m128 mask4 = _mm_cmpeq_ps( _mm_setzero_ps(), _mm_set_ps( 1, 0, 0, 0 ) );
+        const __m128 t1 = _mm_mul_ps( _mm_sub_ps( _mm_and_ps( bmin4, mask4 ), r.orig4 ), r.inv_dir4 );
+        const __m128 t2 = _mm_mul_ps( _mm_sub_ps( _mm_and_ps( bmax4, mask4 ), r.orig4 ), r.inv_dir4 );
+        const __m128 vmax4 = _mm_max_ps( t1, t2 );
+        const __m128 vmin4 = _mm_min_ps( t1, t2 );
+        const float tmax = Math::min(vmax4.m128_f32[0], vmax4.m128_f32[1], vmax4.m128_f32[2]);
+        if (const float tmin = Math::max(vmin4.m128_f32[0], vmin4.m128_f32[1], vmin4.m128_f32[2]);
+            tmax >= tmin && tmin < r.t && tmax > 0) return tmin;
+        return Physics::max_f;
 #else
-        // float tx1 = (this->bounds.min_bound.x - r.orig.x) * r.inv_dir.x, tx2 = (this->bounds.max_bound.x - r.orig.x) * r.inv_dir.x;
-        // float tmin = Math::min( tx1, tx2 ), tmax = Math::max( tx1, tx2 );
-        // float ty1 = (this->bounds.min_bound.y - r.orig.y) * r.inv_dir.y, ty2 = (this->bounds.max_bound.y - r.orig.y) * r.inv_dir.y;
-        // tmin = Math::max( tmin, Math::min( ty1, ty2 ) ), tmax = Math::min( tmax, Math::max( ty1, ty2 ) );
-        // float tz1 = (this->bounds.min_bound.z - r.orig.z) * r.inv_dir.z, tz2 = (this->bounds.max_bound.z - r.orig.z) * r.inv_dir.z;
-        // tmin = Math::max( tmin, Math::min( tz1, tz2 ) ), tmax = Math::min( tmax, Math::max( tz1, tz2 ) );
-        // if (tmax >= tmin && tmin < r.t && tmax > 0) return tmin;
-        // return Physics::max_f;
         auto tmin{0.0f}, tmax{Physics::max_f};
 
         for (auto i = 0; i < 3; ++i) {
-            const auto sign = signbit(r.inv_dir[i]);
-            const auto bmin = this->bounds.corners[sign][i];
-            const auto bmax = this->bounds.corners[!sign][i];
-            const auto dmin = (bmin - r.orig[i]) * r.inv_dir[i];
-            const auto dmax = (bmax - r.orig[i]) * r.inv_dir[i];
+            const auto dmin = (bmin[i] - r.orig[i]) * r.inv_dir[i];
+            const auto dmax = (bmax[i] - r.orig[i]) * r.inv_dir[i];
             tmin = Math::max(tmin, Math::min(dmin, dmax, tmax));
             tmax = Math::min(tmax, Math::max(dmin, dmax, tmin));
         }
@@ -182,15 +184,15 @@ namespace Audio {
         const std::vector<triangle>& triangles, const std::vector<uint>& indices, ray& ray,
         Physics::HitInfo& hit
         ) {
-        uint current_idx{0};
-        auto& current = this->nodes[current_idx];
-        uint stack[64];
+
+        auto* current = &this->nodes[0];
+        node* stack[64];
         uint stack_ptr{0};
 
         for (;;) {
-            if (current.is_leaf()) {
-                for (auto i = 0; i < current.tri_num; ++i) {
-                    const auto tri_idx = indices[current.left_or_first + i];
+            if (current->is_leaf()) {
+                for (auto i = 0; i < current->tri_num; ++i) {
+                    const auto tri_idx = indices[current->left_or_first + i];
                     if (const auto& tri = triangles[tri_idx];
                         tri.intersect(ray, hit)) {
                         hit.tri_n = tri_idx;
@@ -200,15 +202,14 @@ namespace Audio {
                     break;
                 }
 
-                current_idx = stack[--stack_ptr];
-                current = this->nodes[current_idx];
+                current = stack[--stack_ptr];
                 continue;
             }
 
-            auto& c1 = this->nodes[current.left_or_first];
-            auto& c2 = this->nodes[current.left_or_first + 1];
-            auto dist1 = c1.intersect_aabb(ray);
-            auto dist2 = c2.intersect_aabb(ray);
+            auto c1 = &this->nodes[current->left_or_first];
+            auto c2 = &this->nodes[current->left_or_first + 1];
+            auto dist1 = c1->intersect_aabb(ray);
+            auto dist2 = c2->intersect_aabb(ray);
             if (dist1 > dist2) {
                 std::swap(dist1, dist2);
                 std::swap(c1, c2);
@@ -218,13 +219,12 @@ namespace Audio {
                     break;
                 }
 
-                current_idx = stack[--stack_ptr];
-                current = this->nodes[current_idx];
+                current = stack[--stack_ptr];
             } else {
-                if (dist2 != Physics::max_f) {
-                    stack[stack_ptr++] = current.left_or_first + 1;
-                }
                 current = c1;
+                if (dist2 != Physics::max_f) {
+                    stack[stack_ptr++] = c2;
+                }
             }
         }
     }
@@ -237,28 +237,14 @@ namespace Audio {
         auto best_pos{0.0f};
         switch (this->algo) {
         case Longest: {
-            const auto extent = root_node.bounds.max_bound - root_node.bounds.min_bound;
+            const auto extent = root_node.bmax - root_node.bmin;
             if (extent.y > extent.x) { best_axis = 1; }
             if (extent.z > extent[best_axis]) { best_axis = 2; }
-            best_pos = root_node.bounds.min_bound[best_axis] + extent[best_axis] * 0.5f;
+            best_pos = root_node.bmin[best_axis] + extent[best_axis] * 0.5f;
         } break;
         case SAH: {
-            auto best_cost{Physics::max_f};
-            for (auto axis = 0; axis < 3; ++axis) {
-                for (auto i = 0; i < root_node.tri_num; ++i) {
-                    const auto& tri = triangles[indices[root_node.left_or_first + i]];
-                    const auto temp_pos = tri.center[axis];
-                    const auto temp_cost = root_node.eval_sah(triangles, indices, axis, temp_pos);
-                    if (temp_cost < best_cost) {
-                        best_pos = temp_pos;
-                        best_cost = temp_cost;
-                        best_axis = axis;
-                    }
-                }
-            }
-            const auto pe = root_node.bounds.max_bound - root_node.bounds.min_bound;
-            const auto parent_area = pe.x * pe.x + pe.y * pe.y + pe.z * pe.z;
-            const auto parent_cost = root_node.tri_num * parent_area;
+            const auto best_cost = best_split_plane(root_node, triangles, indices, best_axis, best_pos);
+            const auto parent_cost = calc_node_cost(root_node);
             if (best_cost >= parent_cost) { return; }
         } break;
         }
@@ -290,6 +276,44 @@ namespace Audio {
         right_c.update_node_bounds(triangles, indices);
         subdivide(left_i, triangles, indices, depth + 1);
         subdivide(right_i, triangles, indices, depth + 1);
+    }
+
+    float bvh::best_split_plane(
+        const node& root_node, const std::vector<triangle>& triangles, const std::vector<uint>& indices, int& best_axis, float& best_pos
+        ) const {
+        auto best_cost{Physics::max_f};
+        for (auto axis = 0; axis < 3; ++axis) {
+            // for (auto i = 0; i < root_node.tri_num; ++i) {
+            //     const auto& tri = triangles[indices[root_node.left_or_first + i]];
+            //     const auto temp_pos = tri.center[axis];
+            //     if (const auto temp_cost = root_node.eval_sah(triangles, indices, axis, temp_pos);
+            //         temp_cost < best_cost) {
+            //         best_pos = temp_pos;
+            //         best_cost = temp_cost;
+            //         best_axis = axis;
+            //     }
+            // }
+            const auto bmin = root_node.bmin[axis];
+            const auto bmax = root_node.bmax[axis];
+            if (bmin == bmax) continue;
+            const auto scale = (bmax - bmin) / 100.0f;
+            for (auto i = 1; i < 100; ++i) {
+                const auto temp_pos = bmin + scale * i;
+                if (const auto temp_cost = root_node.eval_sah(triangles, indices, axis, temp_pos);
+                    temp_cost < best_cost) {
+                    best_pos = temp_pos;
+                    best_cost = temp_cost;
+                    best_axis = axis;
+                }
+            }
+        }
+        return best_cost;
+    }
+
+    float bvh::calc_node_cost(const node& root_node) const {
+        const auto pe = root_node.bmax - root_node.bmin;
+        const auto parent_area = pe.x * pe.x + pe.y * pe.y + pe.z * pe.z;
+        return static_cast<float>(root_node.tri_num) * parent_area;
     }
 
     void scene::load_from(const std::string& filepath, const bvh::SplitAlgo algo) {
@@ -342,11 +366,11 @@ namespace Audio {
         for (auto i = 0; i < this->bvh_tree.nodes_used; ++i) {
             const auto n = this->bvh_tree.nodes[i];
             Debug::DrawBox(
-                0.5f * (n.bounds.max_bound + n.bounds.min_bound),
+                0.5f * (n.bmax + n.bmin),
                 glm::quat(),
-                n.bounds.max_bound.x - n.bounds.min_bound.x,
-                n.bounds.max_bound.y - n.bounds.min_bound.y,
-                n.bounds.max_bound.z - n.bounds.min_bound.z,
+                n.bmax.x - n.bmin.x,
+                n.bmax.y - n.bmin.y,
+                n.bmax.z - n.bmin.z,
                 glm::vec4(0, 1, 0, 1),
                 Debug::WireFrame,
                 2.0f

@@ -103,7 +103,7 @@ namespace Game {
         const auto emitter_position = glm::vec3(6.0f, -6.0f, 0.0f);
         const auto emitter_transform = glm::translate(emitter_position) * glm::scale(glm::vec3(0.5f));
 
-        Audio::AudioManager::get().load_scene(fs::create_path_from_rel_s("assets/audio/cathedral.glb"));
+        Audio::AudioManager::get().load_scene(fs::create_path_from_rel_s("assets/audio/cathedral.glb"), Audio::bvh::SAH);
 
         // Setup skybox
         std::vector<std::string> skybox

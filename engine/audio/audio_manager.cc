@@ -5,6 +5,8 @@
 #include "config.h"
 #include "audio_manager.h"
 
+#include <ranges>
+
 
 #include "core/maths.h"
 #include "core/random.h"
@@ -84,6 +86,8 @@ namespace Audio {
             auto r = m_ray_cq.front();
             m_ray_cq.pop_front();
 
+            // Debug::DrawLine(r.orig, r.orig + r.dir, 2.0f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), Debug::Normal);
+
             sound_path_id path_id;
             sound_path_data path_data;
             for (auto i = 0; i < 4; ++i) {
@@ -101,6 +105,7 @@ namespace Audio {
                     r.orig = hit_info.pos + Physics::epsilon_f * hit_info.norm;
                     r.dir = glm::reflect(r.dir, hit_info.norm);
                     r.inv_dir = 1.0f / r.dir;
+                    // Debug::DrawLine(r.orig, r.orig + r.dir, 2.0f, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f), Debug::Normal);
                     continue;
                 }
 
@@ -133,8 +138,8 @@ namespace Audio {
         }
 
         for (auto & m_path : m_paths) {
-            for (auto it = m_path.begin(); it != m_path.end(); ++it) {
-                const auto& [position, length, bounces] = it->second;
+            for (auto& val: m_path | std::views::values) {
+                const auto& [position, length, bounces] = val;
                 m_emitter.activate_voice(position, length, bounces);
             }
         }
