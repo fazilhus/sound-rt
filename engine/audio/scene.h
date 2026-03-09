@@ -62,7 +62,7 @@ namespace Audio {
         bool intersect(ray& r, Physics::HitInfo& hit) const;
     };
 
-    constexpr auto BVH_DEPTH = 16;
+    constexpr auto BVH_DEPTH = 20;
 
     struct aabb {
         union {

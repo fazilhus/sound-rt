@@ -8,15 +8,16 @@
 #include <ranges>
 
 
+#include "core/cvar.h"
 #include "core/maths.h"
 #include "core/random.h"
-#include "physics/phy.h"
-#include "physics/ray.h"
 #include "render/debugrender.h"
 
 
 namespace Audio {
 
+    static Core::CVar* a_enable_direct = nullptr;
+    static Core::CVar* a_enable_indirect = nullptr;
 
     AudioManager::AudioManager() {
         m_soloud.init();
@@ -30,6 +31,9 @@ namespace Audio {
         m_soloud.set3dListenerPosition(0, 0, 0);
         m_soloud.set3dListenerUp(0, 1, 0);
         m_soloud.set3dListenerAt(0, 0, -1);
+
+        a_enable_direct = Core::CVarCreate(Core::CVarType::CVar_Int, "a_enable_direct", "1");
+        a_enable_indirect = Core::CVarCreate(Core::CVarType::CVar_Int, "a_enable_indirect", "1");
     }
 
     AudioManager::~AudioManager() {
@@ -61,8 +65,12 @@ namespace Audio {
     void AudioManager::update() {
         m_emitter.reset_voices();
 
-        // _direct_los_stage();
-        _indirect_stage();
+        if (1 == Core::CVarReadInt(a_enable_direct)) {
+            _direct_los_stage();
+        }
+        if (1 == Core::CVarReadInt(a_enable_indirect)) {
+            _indirect_stage();
+        }
 
         m_emitter.update(m_soloud);
         m_soloud.update3dAudio();
@@ -90,8 +98,8 @@ namespace Audio {
 
             sound_path_id path_id;
             sound_path_data path_data;
-            for (auto i = 0; i < 4; ++i) {
-                if (m_paths[i].size() >= 128) {
+            for (auto i = 0; i < MAX_RAY_BOUNCES; ++i) {
+                if (m_paths[i].size() >= 256) {
                     continue;
                 }
                 Physics::HitInfo hit_info;

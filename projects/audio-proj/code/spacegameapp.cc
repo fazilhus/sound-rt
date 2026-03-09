@@ -254,27 +254,20 @@ namespace Game {
                 Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
             }
 
-            // ImGui::SeparatorText("Collision Debug Draw");
-            // Core::CVar* r_draw_aabb = Core::CVarGet("r_draw_aabb");
-            // int draw_aabb = Core::CVarReadInt(r_draw_aabb);
-            // if (ImGui::Checkbox("Draw AABBs", reinterpret_cast<bool*>(&draw_aabb))) {
-            //     Core::CVarWriteInt(r_draw_aabb, draw_aabb);
-            // }
-            // Core::CVar* r_draw_aabb_id = Core::CVarGet("r_draw_aabb_id");
-            // int draw_aabb_id = Core::CVarReadInt(r_draw_aabb_id);
-            // if (ImGui::InputInt("AABB id", (int*)&draw_aabb_id)) {
-            //     Core::CVarWriteInt(r_draw_aabb_id, draw_aabb_id);
-            // }
-            // Core::CVar* r_draw_cm_id = Core::CVarGet("r_draw_cm_id");
-            // int draw_cm_id = Core::CVarReadInt(r_draw_cm_id);
-            // if (ImGui::InputInt("Collision Mesh id", (int*)&draw_cm_id)) {
-            //     Core::CVarWriteInt(r_draw_cm_id, draw_cm_id);
-            // }
-            // auto distance_between_cam_and_sel = 0.0f;
-            // if (Physics::get_colliders().states.size() > 0 && draw_cm_id >= 0) {
-            //    distance_between_cam_and_sel  = glm::length(camera->pos - Physics::get_colliders().states[draw_cm_id].dyn.pos);
-            // }
-            // ImGui::Text("Distance: %0.2f", distance_between_cam_and_sel);
+            ImGui::SeparatorText("Audio");
+
+            Core::CVar* a_enable_direct = Core::CVarGet("a_enable_direct");
+            auto direct_enabled = Core::CVarReadInt(a_enable_direct);
+            if (ImGui::Checkbox("Enable Direct", reinterpret_cast<bool*>(&direct_enabled))) {
+                Core::CVarWriteInt(a_enable_direct, direct_enabled);
+            }
+
+            Core::CVar* a_enable_indirect = Core::CVarGet("a_enable_indirect");
+            auto indirect_enabled = Core::CVarReadInt(a_enable_indirect);
+            if (ImGui::Checkbox("Enable Indirect", reinterpret_cast<bool*>(&indirect_enabled))) {
+                Core::CVarWriteInt(a_enable_indirect, indirect_enabled);
+            }
+
             ImGui::End();
 
             Debug::DispatchDebugTextDrawing();

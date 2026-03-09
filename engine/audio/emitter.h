@@ -25,7 +25,7 @@ namespace Audio {
         void init(SoLoud::Soloud& soloud, SoLoud::Bus& bus, SoLoud::Wav& source, unsigned int attenuation_type, float rolloff, float min_dist, float max_dist);
     };
 
-    constexpr auto MAX_VOICES_PER_EMITTER{256};//1023-5};
+    constexpr auto MAX_VOICES_PER_EMITTER{512};//1023-5};
 
     struct Emitter {
         glm::mat4 m_transform{};
