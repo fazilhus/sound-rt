@@ -21,7 +21,7 @@ namespace Audio {
     struct sound_path_data {
         void extend(const glm::vec3& pos, float t);
 
-        glm::vec3 position;
+        std::vector<glm::vec3> positions;
         float length{};
         int bounces{};
     };

@@ -19,12 +19,16 @@
 namespace Audio {
 
     static Core::CVar* a_sound_speed = nullptr;
+    static Core::CVar* a_draw_paths = nullptr;
+    static Core::CVar* a_draw_paths_depth = nullptr;
 
     AudioManager::AudioManager() {
         m_soloud.init();
         m_soloud.setMaxActiveVoiceCount(MAX_VOICES_PER_EMITTER + 5);
 
         a_sound_speed =  Core::CVarCreate(Core::CVarType::CVar_Float, "a_sound_speed", "343.0");
+        a_draw_paths = Core::CVarCreate(Core::CVarType::CVar_Int, "a_draw_paths", "0");
+        a_draw_paths_depth = Core::CVarCreate(Core::CVarType::CVar_Int, "a_draw_paths_depth", "1");
 
         m_soloud.set3dSoundSpeed(Core::CVarReadFloat(a_sound_speed));
         m_emitter.init(
@@ -108,20 +112,10 @@ namespace Audio {
 
         auto num_voices = 0;
         for (auto & m_path : m_paths) {
+            if (m_paths->size() > 1) continue;
             for (auto it = m_path.begin(); it != m_path.end();) {
                 if (const auto& pd = it->second;
-                    _has_los(m_listener.m_position, pd.position)) {
-                    const auto bounce_ratio = static_cast<float>(Physics::MAX_RAY_BOUNCES - pd.bounces) / static_cast<float>(Physics::MAX_RAY_BOUNCES);
-                    Debug::DrawBox(
-                        pd.position,
-                        glm::quat(),
-                        0.1f,
-                        glm::vec4(
-                            bounce_ratio,
-                            1.0f - bounce_ratio,
-                            0.0f,
-                            1.0f)
-                        );
+                    _has_los(m_listener.m_position, pd.positions.back())) {
                     num_voices++;
                     ++it;
                 } else {
@@ -131,9 +125,36 @@ namespace Audio {
         }
 
         for (auto & m_path : m_paths) {
-            for (auto it = m_path.begin(); it != m_path.end(); ++it) {
-                const auto& [position, length, bounces] = it->second;
-                m_emitter.activate_voice(position, length, bounces);
+            for (auto& pd: m_path | std::views::values) {
+                if (const auto draw_paths = Core::CVarReadInt(a_draw_paths);
+                    draw_paths == 1) {
+                    auto line_start = m_emitter.m_position;
+                    const auto draw_path_depth = Core::CVarReadInt(a_draw_paths_depth);
+                    for (auto i = 0; i < Math::min(static_cast<int>(pd.positions.size()), draw_path_depth); ++i) {
+                        const auto pos = pd.positions[i];
+                        const auto bounce_ratio = static_cast<float>(Physics::MAX_RAY_BOUNCES - pd.bounces) / static_cast<float>(Physics::MAX_RAY_BOUNCES);
+                        Debug::DrawBox(
+                            pos,
+                            glm::quat(),
+                            0.1f,
+                            glm::vec4(
+                                bounce_ratio,
+                                1.0f - bounce_ratio,
+                                0.0f,
+                                1.0f)
+                            );
+                        Debug::DrawLine(
+                            line_start,
+                            pos,
+                            1.0f,
+                            glm::vec4(1.0f),
+                            Debug::Normal
+                            );
+                        line_start = pos;
+                    }
+                }
+                const auto& [positions, length, bounces] = pd;
+                m_emitter.activate_voice(positions.back(), length, bounces);
             }
         }
     }

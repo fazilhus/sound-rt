@@ -86,7 +86,7 @@ namespace Game {
         Camera* cam = CameraManager::GetCamera(CAMERA_MAIN);
         cam->projection = projection;
 
-        auto cam_pos = glm::vec3(0, 1.0f, -5.0f);
+        auto cam_pos = glm::vec3(5.0f, 1.0f, -5.0f);
         auto t = glm::mat4(1.0f);
         cam->view = lookAt(cam_pos, cam_pos + glm::vec3(t[2]), glm::vec3(t[1]));
 
@@ -202,7 +202,7 @@ namespace Game {
                 Physics::get_collider_meshes().complex[collider_meshes[2].index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(5.0f, 2.5f, 0.1f),
+                glm::vec3(5.0f, 3.0f, 0.1f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::Audio
                 );
             cubes.emplace_back(cube);
@@ -212,13 +212,13 @@ namespace Game {
         {
             std::tuple<ModelId, Physics::ColliderId> cube;
             std::get<0>(cube) = cubemesh;
-            constexpr auto translation = glm::vec3(0.0f, 0.5f, 3.0f);
+            constexpr auto translation = glm::vec3(0.1f, 0.5f, 3.0f);
             std::get<1>(cube) = Physics::create_staticbody(
                 collider_meshes[3],
                 Physics::get_collider_meshes().complex[collider_meshes[3].index].center,
                 translation,
                 glm::quat(),
-                glm::vec3(0.5f),
+                glm::vec3(0.25f),
                 Physics::CollisionMask::Physics | Physics::CollisionMask::AudioSource
                 );
             sound_cube = std::get<1>(cube);
@@ -267,6 +267,8 @@ namespace Game {
         Physics::HitInfo hit;
         // auto dt = 1.0f / 60.0f;
 
+        auto xvel = 1.0f;
+
         // game loop
         while (this->window->IsOpen()) {
             auto timeStart = std::chrono::steady_clock::now();
@@ -280,37 +282,51 @@ namespace Game {
 
             if (kbd->pressed[Input::Key::Code::End]) { ShaderResource::ReloadShaders(); }
 
-            if (kbd->held[Input::Key::LeftControl] && mouse->held[Input::Mouse::Button::LeftButton]) {
-                r = DebugCamera::SpawnRay();
-                const auto aabb = Core::CVarGet("r_draw_aabb");
-                const auto aabb_id = Core::CVarGet("r_draw_aabb_id");
-                const auto cm_id = Core::CVarGet("r_draw_cm_id");
-                if (Physics::cast_ray(r, hit)) {
-                    Core::CVarWriteInt(aabb, 1);
-                    Core::CVarWriteInt(aabb_id, hit.collider.index);
-                    Core::CVarWriteInt(cm_id, hit.collider.index);
-                    Physics::add_impulse(hit.collider, hit.pos, 1.0f * r.dir);
+            // if (kbd->held[Input::Key::LeftControl] && mouse->held[Input::Mouse::Button::LeftButton]) {
+            //     r = DebugCamera::SpawnRay();
+            //     const auto aabb = Core::CVarGet("r_draw_aabb");
+            //     const auto aabb_id = Core::CVarGet("r_draw_aabb_id");
+            //     const auto cm_id = Core::CVarGet("r_draw_cm_id");
+            //     if (Physics::cast_ray(r, hit)) {
+            //         Core::CVarWriteInt(aabb, 1);
+            //         Core::CVarWriteInt(aabb_id, hit.collider.index);
+            //         Core::CVarWriteInt(cm_id, hit.collider.index);
+            //         Physics::add_impulse(hit.collider, hit.pos, 1.0f * r.dir);
+            //     }
+            //     else {
+            //         Core::CVarWriteInt(aabb, 0);
+            //         Core::CVarWriteInt(aabb_id, -1);
+            //         Core::CVarWriteInt(cm_id, -1);
+            //     }
+            // }
+            // Debug::DrawRay(r, glm::vec4(1, 0, 1, 1));
+            // hit = {};
+            // if (hit.hit()) {
+            //     Debug::DrawBox(
+            //         hit.pos,
+            //         glm::quat(),
+            //         0.1f,
+            //         glm::vec4(1, 0, 1, 1)
+            //         );
+            // }
+
+            {
+                auto& cube_state = Physics::colliders().states[sound_cube.index];
+                if (cube_state.dyn.pos.x <= 0.0f) {
+                    xvel = 1.0f;
+                    cube_state.dyn.pos.x = 0.01f;
                 }
-                else {
-                    Core::CVarWriteInt(aabb, 0);
-                    Core::CVarWriteInt(aabb_id, -1);
-                    Core::CVarWriteInt(cm_id, -1);
+                if (cube_state.dyn.pos.x >= 5.0f) {
+                    xvel = -1.0f;
+                    cube_state.dyn.pos.x = 4.99f;
                 }
-            }
-            Debug::DrawRay(r, glm::vec4(1, 0, 1, 1));
-            hit = {};
-            if (hit.hit()) {
-                Debug::DrawBox(
-                    hit.pos,
-                    glm::quat(),
-                    0.1f,
-                    glm::vec4(1, 0, 1, 1)
-                    );
+                cube_state.dyn.vel = glm::vec3(xvel, 0.0f, 0.0f);
             }
 
             Physics::step(this->deltaTime);
 
             Audio::AudioManager::get().update_listener_pos_and_at(camera->pos, camera->ort);
+            Audio::AudioManager::get().update_emitter_position(Physics::colliders().states[sound_cube.index].dyn.pos);
             Audio::AudioManager::get().update();
 
             // Store all drawcalls in the render device
@@ -352,31 +368,43 @@ namespace Game {
     */
     void SpaceGameApp::RenderUI() const {
         if (this->window->IsOpen()) {
-            ImGui::Begin("Debug");
+            ImGui::Begin("DeltaTime");
 
             ImGui::Text(std::to_string(this->deltaTime).c_str());
 
-            ImGui::Text("Debug Camera");
-            ImGui::InputFloat3("Pos", &camera->pos[0]);
-
-            ImGui::SeparatorText("Mouse");
-            auto ml = Math::norm_screen_pos(Input::GetDefaultMouse()->position, glm::vec2(1920.0f, 1080.0f));
-            ImGui::InputFloat2("Loc", &ml[0]);
+            // ImGui::Text("Debug Camera");
+            // ImGui::InputFloat3("Pos", &camera->pos[0]);
+            //
+            // ImGui::SeparatorText("Mouse");
+            // auto ml = Math::norm_screen_pos(Input::GetDefaultMouse()->position, glm::vec2(1920.0f, 1080.0f));
+            // ImGui::InputFloat2("Loc", &ml[0]);
 
             ImGui::SeparatorText("Debug Draw");
 
-            Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
-            int drawLightSpheres = Core::CVarReadInt(r_draw_light_spheres);
-            if (ImGui::Checkbox("Draw Light Spheres", reinterpret_cast<bool*>(&drawLightSpheres))) {
-                Core::CVarWriteInt(r_draw_light_spheres, drawLightSpheres);
+            Core::CVar* a_draw_paths = Core::CVarGet("a_draw_paths");
+            auto draw_paths = Core::CVarReadInt(a_draw_paths);
+            if (ImGui::Checkbox("Draw Propagation Paths", reinterpret_cast<bool*>(&draw_paths))) {
+                Core::CVarWriteInt(a_draw_paths, draw_paths);
             }
 
-            Core::CVar* r_draw_light_sphere_id = Core::CVarGet("r_draw_light_sphere_id");
-            int lightSphereId = Core::CVarReadInt(r_draw_light_sphere_id);
-            if (ImGui::InputInt("LightSphereId", (int*)&lightSphereId)){
-                Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
+            Core::CVar* a_draw_paths_depth = Core::CVarGet("a_draw_paths_depth");
+            auto draw_paths_depth = Core::CVarReadInt(a_draw_paths_depth);
+            if (ImGui::SliderInt("Propagation Paths Depth", &draw_paths_depth, 1, 4)) {
+                Core::CVarWriteInt(a_draw_paths_depth, draw_paths_depth);
             }
 
+            // Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
+            // int drawLightSpheres = Core::CVarReadInt(r_draw_light_spheres);
+            // if (ImGui::Checkbox("Draw Light Spheres", reinterpret_cast<bool*>(&drawLightSpheres))) {
+            //     Core::CVarWriteInt(r_draw_light_spheres, drawLightSpheres);
+            // }
+            //
+            // Core::CVar* r_draw_light_sphere_id = Core::CVarGet("r_draw_light_sphere_id");
+            // int lightSphereId = Core::CVarReadInt(r_draw_light_sphere_id);
+            // if (ImGui::InputInt("LightSphereId", (int*)&lightSphereId)){
+            //     Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
+            // }
+            //
             ImGui::SeparatorText("Collision Debug Draw");
             Core::CVar* r_draw_aabb = Core::CVarGet("r_draw_aabb");
             int draw_aabb = Core::CVarReadInt(r_draw_aabb);
@@ -393,11 +421,11 @@ namespace Game {
             if (ImGui::InputInt("Collision Mesh id", (int*)&draw_cm_id)) {
                 Core::CVarWriteInt(r_draw_cm_id, draw_cm_id);
             }
-            auto distance_between_cam_and_sel = 0.0f;
-            if (draw_cm_id >= 0) {
-               distance_between_cam_and_sel  = glm::length(camera->pos - Physics::get_colliders().states[draw_cm_id].dyn.pos);
-            }
-            ImGui::Text("Distance: %0.2f", distance_between_cam_and_sel);
+            // auto distance_between_cam_and_sel = 0.0f;
+            // if (draw_cm_id >= 0) {
+            //    distance_between_cam_and_sel  = glm::length(camera->pos - Physics::get_colliders().states[draw_cm_id].dyn.pos);
+            // }
+            // ImGui::Text("Distance: %0.2f", distance_between_cam_and_sel);
             ImGui::End();
 
             Debug::DispatchDebugTextDrawing();

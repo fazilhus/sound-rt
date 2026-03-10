@@ -15,7 +15,7 @@ namespace Audio {
     }
 
     void sound_path_data::extend(const glm::vec3& pos, const float t) {
-        position = pos;
+        positions.push_back(pos);
         length += t;
         bounces++;
     }

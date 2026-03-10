@@ -18,7 +18,7 @@ namespace Audio {
     struct Listener;
     struct Emitter;
 
-    constexpr auto NUM_RAYS_PER_FRAME = 128;
+    constexpr auto NUM_RAYS_PER_FRAME = 1;
 
     class AudioManager {
     public:
