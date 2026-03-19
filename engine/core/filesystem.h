@@ -4,7 +4,7 @@
 
 
 namespace fs {
-    static std::filesystem::path project_root = std::filesystem::current_path().parent_path().parent_path();
+    static std::filesystem::path project_root = std::filesystem::current_path();//.parent_path().parent_path();
 
     static std::filesystem::path create_path_from_rel(const std::string& filepath) {
         auto new_path = project_root / filepath;
